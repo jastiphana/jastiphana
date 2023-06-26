@@ -1,0 +1,1393 @@
+GAMS 37.1.0  r07954d5 Released Nov 11, 2021 WEX-WEI x86 64bit/MS Windows - 06/20/23 17:55:56 Page 1
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+C o m p i l a t i o n
+
+
+  16  ;
+  17   
+  18   
+  19   
+INCLUDE    D:\kdianti\practice\AIMPLUM_NEWEST\exe\../AIMPLUM2/inc_prog/pre_10year.gms
+  21  *-*-*-*- This program is included by ..\prog\scenario.gms
+  22   
+INCLUDE    D:\kdianti\practice\AIMPLUM_NEWEST\exe\../AIMPLUM2/inc_prog/second_10year.gms
+  40  *-*-*-*- This program is included by ..\prog\scenario.gms
+  41   
+  43   
+  45   
+  46   
+  47   
+  48  *PBIOEXOQ0 the given global bioenergy amount EJ per year
+  49  *PBIOEXOP0 the given global bioenergy price $ per GJ
+  50   
+INCLUDE    D:\kdianti\practice\AIMPLUM_NEWEST\exe\../AIMPLUM2/scenario/socioeconomic/SSP2.gms
+  54   
+  55   
+  56   
+  57  Set
+  58  R       17 regions      /
+INCLUDE    D:\kdianti\practice\AIMPLUM_NEWEST\exe\../AIMPLUM2/define/region/region17.set
+  60  USA     USA
+  61  XE25    EU
+  62  XER     Rest of EU
+  63  TUR     Turkey
+  64  XOC     New Zealand and Australia
+  65  CHN     China
+  66  IND     India
+  67  JPN     Japan
+  68  XSE     Rest of East and South East Asia
+  69  XSA     Rest of Asia
+  70  CAN     Canada
+  71  BRA     Brazil
+  72  XLM     Rest of Brazil
+  73  CIS     Former USSR
+  74  XME     Middle East
+  75  XNF     North Africa
+  76  XAF     Sub-Sahara
+  77  WLD,OECD90,REF,ASIA,MAF,LAM
+  78  /
+  79  Sr(R)/
+  80  WLD,OECD90,REF,ASIA,MAF,LAM
+  81  /
+  82  G       Cell number  /
+60375  /
+60376  Y year  /  2100  /
+60377  L land use type /
+60378  *PRM_SEC        forest + grassland + pasture
+60379  FRSGL   forest + grassland
+60380  FRS     forest
+60381  AFR     afforestation
+60382  PAS     grazing pasture
+60383  CL      cropland
+60384  BIO     bio crops
+60385  CROP_FLW        fallow land
+60386  GL      grassland
+60387  SL      built_up
+60388  OL      ice or water
+60389  LUC     land use change total
+60390  /
+60391  LB              New or old bioenergy cropland/
+60392  BION    new bioenergy cropland
+60393  BIOO    old bioenergy cropland
+60394  BION_DEG
+60395  /
+60396  LCL(L)/CL/
+60397  LBIO(L)/BIO/
+60398  LCLBIO(L)/CL,BIO/
+60399  LNBIOP(L) land category NOT for bioenergy potential /CL,PAS,CROP_FLW,SL,OL,AFR/
+60400  MAP_RG(R,G)     Relationship between country R and cell G
+60401   
+60402  ;
+60403  Alias(R,R2),(G,G2);
+60404  set
+60405  MAP_RAGG(R,R2)  /
+INCLUDE    D:\kdianti\practice\AIMPLUM_NEWEST\exe\../AIMPLUM2/define/region/region17_agg.map
+60407  XE25    .       WLD
+60408  XER     .       WLD
+60409  TUR     .       WLD
+60410  XOC     .       WLD
+60411  CHN     .       WLD
+60412  IND     .       WLD
+60413  JPN     .       WLD
+60414  XSE     .       WLD
+60415  XSA     .       WLD
+60416  CAN     .       WLD
+60417  USA     .       WLD
+60418  BRA     .       WLD
+60419  XLM     .       WLD
+60420  CIS     .       WLD
+60421  XME     .       WLD
+60422  XNF     .       WLD
+60423  XAF     .       WLD
+60424   
+60425  XE25    .       OECD90
+60426  XER     .       REF
+60427  TUR     .       OECD90
+60428  XOC     .       OECD90
+60429  CHN     .       ASIA
+60430  IND     .       ASIA
+60431  JPN     .       OECD90
+60432  XSE     .       ASIA
+60433  XSA     .       ASIA
+60434  CAN     .       OECD90
+60435  USA     .       OECD90
+60436  BRA     .       LAM
+60437  XLM     .       LAM
+60438  CIS     .       REF
+60439  XME     .       MAF
+60440  XNF     .       MAF
+60441  XAF     .       MAF
+60442   
+60443  /
+60444  ;
+60445  parameter
+60446  YBIO(G)
+60447  YBIOLB(G,LB)
+60448  PBIO(G,LB)
+60449  GA(G)           Grid area of cell G kha
+60450  Y_pre(L,G)
+60451  VYLCL(G)
+60452  pa_bio(G)       land transition costs per unit area (million $ per ha)
+60453  pc_bio(R)
+60454  VYL(L,G)
+60455  protect_wopas(G)
+60456  YIELDBIO(G)
+60457  ;
+60458   
+GDXIN   D:\kdianti\practice\AIMPLUM_NEWEST\exe\../AIMPLUM2/data/data_prep.gdx
+--- LOAD  GA = 5:GA
+--- LOAD  MAP_RG = 2:MAP_RG
+60461   
+BATINCLUDE D:\kdianti\practice\AIMPLUM_NEWEST\exe\../AIMPLUM2/inc_prog/BiolandR.gms
+60463  *-*-*-*- This program is included by ..\prog\Bioland.gms
+60464  parameter
+60465  *PBIO%1(G,LB)
+60466  *BIOENE%1(G) GJ per ha per year
+60467  *RAREA_BIOP%1(G) Ratio of area of biocrop in cell G in year Y [-]
+60468  Y_preUSA(LCL,G)
+60469  VYLUSA(L,G)
+60470  protect_wopasUSA(G)
+60471  pa_bioUSA(G)         land transition costs per unit area for BIO (million $ per ha)
+60472  YIELDUSA(LBIO,G)
+60473  pcUSA(LBIO)         land transition costs per unit area (million $ per ha)
+60474  CSUSA(G)         carbon density (MgC per ha)
+60475  CS(G)
+60476  ;
+60477   
+GDXIN   D:\kdianti\practice\AIMPLUM_NEWEST\exe\../output/gdx/SSP2_BaU_NoCC/USA/2090.gdx
+--- LOAD  Y_preUSA = 2:VY_load
+60482   
+GDXIN   D:\kdianti\practice\AIMPLUM_NEWEST\exe\../output/gdx/SSP2_BaU_NoCC/USA/2010.gdx
+--- LOAD  protect_wopasUSA = 18:protect_wopas
+60487   
+GDXIN   D:\kdianti\practice\AIMPLUM_NEWEST\exe\../output/gdx/SSP2_BaU_NoCC/USA/2100.gdx
+60490  *$load PBIO%1=PBIO RAREA_BIOP%1=RAREA_BIOP
+--- LOAD  VYLUSA = 2:VY_load
+--- LOAD  pa_bioUSA = 21:pa_bio
+--- LOAD  pcUSA = 26:pc
+--- LOAD  CSUSA = 9:CS
+60493   
+60495   
+GDXIN   D:\kdianti\practice\AIMPLUM_NEWEST\exe\../output/gdx/base/USA/basedata.gdx
+60497  *$load BIOENE%1=BIOENE
+--- LOAD  YIELDUSA = 5:YIELD
+60499   
+60500   
+60501  *PBIO(G,LB)$(PBIO%1(G,LB))=PBIO%1(G,LB);
+60502  *BIOENE(G)$(BIOENE%1(G))=BIOENE%1(G);
+60503  *RAREA_BIOP(G)$(RAREA_BIOP%1(G))=RAREA_BIOP%1(G);
+60504   
+60505  Y_pre("CL",G)$(Y_preUSA("CL",G))=Y_preUSA("CL",G);
+60506  *VYLCL(G)$(VYL%1("CL",G))=VYL%1("CL",G);
+60507   
+60508  VYL(L,G)$(VYLUSA(L,G))=VYLUSA(L,G);
+60509  protect_wopas(G)$(protect_wopasUSA(G))=protect_wopasUSA(G);
+60510  YIELDBIO(G)$(YIELDUSA("BIO",G))=YIELDUSA("BIO",G);
+60511  pa_bio(G)$(pa_bioUSA(G)) = pa_bioUSA(G);
+60512  pc_bio("USA")$pcUSA("BIO")=pcUSA("BIO");
+60513  CS(G)$CSUSA(G)=CSUSA(G);
+BATINCLUDE D:\kdianti\practice\AIMPLUM_NEWEST\exe\../AIMPLUM2/inc_prog/BiolandR.gms
+60515  *-*-*-*- This program is included by ..\prog\Bioland.gms
+60516  parameter
+60517  *PBIO%1(G,LB)
+60518  *BIOENE%1(G) GJ per ha per year
+60519  *RAREA_BIOP%1(G) Ratio of area of biocrop in cell G in year Y [-]
+60520  Y_preXE25(LCL,G)
+60521  VYLXE25(L,G)
+60522  protect_wopasXE25(G)
+60523  pa_bioXE25(G)         land transition costs per unit area for BIO (million $ per ha)
+60524  YIELDXE25(LBIO,G)
+60525  pcXE25(LBIO)         land transition costs per unit area (million $ per ha)
+60526  CSXE25(G)         carbon density (MgC per ha)
+60527  CS(G)
+60528  ;
+60529   
+GDXIN   D:\kdianti\practice\AIMPLUM_NEWEST\exe\../output/gdx/SSP2_BaU_NoCC/XE25/2090.gdx
+--- LOAD  Y_preXE25 = 2:VY_load
+60534   
+GDXIN   D:\kdianti\practice\AIMPLUM_NEWEST\exe\../output/gdx/SSP2_BaU_NoCC/XE25/2010.gdx
+--- LOAD  protect_wopasXE25 = 18:protect_wopas
+60539   
+GDXIN   D:\kdianti\practice\AIMPLUM_NEWEST\exe\../output/gdx/SSP2_BaU_NoCC/XE25/2100.gdx
+60542  *$load PBIO%1=PBIO RAREA_BIOP%1=RAREA_BIOP
+--- LOAD  VYLXE25 = 2:VY_load
+--- LOAD  pa_bioXE25 = 21:pa_bio
+--- LOAD  pcXE25 = 26:pc
+--- LOAD  CSXE25 = 9:CS
+60545   
+60547   
+GDXIN   D:\kdianti\practice\AIMPLUM_NEWEST\exe\../output/gdx/base/XE25/basedata.gdx
+60549  *$load BIOENE%1=BIOENE
+--- LOAD  YIELDXE25 = 5:YIELD
+60551   
+60552   
+60553  *PBIO(G,LB)$(PBIO%1(G,LB))=PBIO%1(G,LB);
+60554  *BIOENE(G)$(BIOENE%1(G))=BIOENE%1(G);
+60555  *RAREA_BIOP(G)$(RAREA_BIOP%1(G))=RAREA_BIOP%1(G);
+60556   
+60557  Y_pre("CL",G)$(Y_preXE25("CL",G))=Y_preXE25("CL",G);
+60558  *VYLCL(G)$(VYL%1("CL",G))=VYL%1("CL",G);
+60559   
+60560  VYL(L,G)$(VYLXE25(L,G))=VYLXE25(L,G);
+60561  protect_wopas(G)$(protect_wopasXE25(G))=protect_wopasXE25(G);
+60562  YIELDBIO(G)$(YIELDXE25("BIO",G))=YIELDXE25("BIO",G);
+60563  pa_bio(G)$(pa_bioXE25(G)) = pa_bioXE25(G);
+60564  pc_bio("XE25")$pcXE25("BIO")=pcXE25("BIO");
+60565  CS(G)$CSXE25(G)=CSXE25(G);
+BATINCLUDE D:\kdianti\practice\AIMPLUM_NEWEST\exe\../AIMPLUM2/inc_prog/BiolandR.gms
+60567  *-*-*-*- This program is included by ..\prog\Bioland.gms
+60568  parameter
+60569  *PBIO%1(G,LB)
+60570  *BIOENE%1(G) GJ per ha per year
+60571  *RAREA_BIOP%1(G) Ratio of area of biocrop in cell G in year Y [-]
+60572  Y_preXER(LCL,G)
+60573  VYLXER(L,G)
+60574  protect_wopasXER(G)
+60575  pa_bioXER(G)         land transition costs per unit area for BIO (million $ per ha)
+60576  YIELDXER(LBIO,G)
+60577  pcXER(LBIO)         land transition costs per unit area (million $ per ha)
+60578  CSXER(G)         carbon density (MgC per ha)
+60579  CS(G)
+60580  ;
+60581   
+GDXIN   D:\kdianti\practice\AIMPLUM_NEWEST\exe\../output/gdx/SSP2_BaU_NoCC/XER/2090.gdx
+--- LOAD  Y_preXER = 2:VY_load
+60586   
+GDXIN   D:\kdianti\practice\AIMPLUM_NEWEST\exe\../output/gdx/SSP2_BaU_NoCC/XER/2010.gdx
+--- LOAD  protect_wopasXER = 18:protect_wopas
+60591   
+GDXIN   D:\kdianti\practice\AIMPLUM_NEWEST\exe\../output/gdx/SSP2_BaU_NoCC/XER/2100.gdx
+60594  *$load PBIO%1=PBIO RAREA_BIOP%1=RAREA_BIOP
+--- LOAD  VYLXER = 2:VY_load
+--- LOAD  pa_bioXER = 21:pa_bio
+--- LOAD  pcXER = 26:pc
+--- LOAD  CSXER = 9:CS
+60597   
+60599   
+GDXIN   D:\kdianti\practice\AIMPLUM_NEWEST\exe\../output/gdx/base/XER/basedata.gdx
+60601  *$load BIOENE%1=BIOENE
+--- LOAD  YIELDXER = 5:YIELD
+60603   
+60604   
+60605  *PBIO(G,LB)$(PBIO%1(G,LB))=PBIO%1(G,LB);
+60606  *BIOENE(G)$(BIOENE%1(G))=BIOENE%1(G);
+60607  *RAREA_BIOP(G)$(RAREA_BIOP%1(G))=RAREA_BIOP%1(G);
+60608   
+60609  Y_pre("CL",G)$(Y_preXER("CL",G))=Y_preXER("CL",G);
+60610  *VYLCL(G)$(VYL%1("CL",G))=VYL%1("CL",G);
+60611   
+60612  VYL(L,G)$(VYLXER(L,G))=VYLXER(L,G);
+60613  protect_wopas(G)$(protect_wopasXER(G))=protect_wopasXER(G);
+60614  YIELDBIO(G)$(YIELDXER("BIO",G))=YIELDXER("BIO",G);
+60615  pa_bio(G)$(pa_bioXER(G)) = pa_bioXER(G);
+60616  pc_bio("XER")$pcXER("BIO")=pcXER("BIO");
+60617  CS(G)$CSXER(G)=CSXER(G);
+BATINCLUDE D:\kdianti\practice\AIMPLUM_NEWEST\exe\../AIMPLUM2/inc_prog/BiolandR.gms
+60619  *-*-*-*- This program is included by ..\prog\Bioland.gms
+60620  parameter
+60621  *PBIO%1(G,LB)
+60622  *BIOENE%1(G) GJ per ha per year
+60623  *RAREA_BIOP%1(G) Ratio of area of biocrop in cell G in year Y [-]
+60624  Y_preTUR(LCL,G)
+60625  VYLTUR(L,G)
+60626  protect_wopasTUR(G)
+60627  pa_bioTUR(G)         land transition costs per unit area for BIO (million $ per ha)
+60628  YIELDTUR(LBIO,G)
+60629  pcTUR(LBIO)         land transition costs per unit area (million $ per ha)
+60630  CSTUR(G)         carbon density (MgC per ha)
+60631  CS(G)
+60632  ;
+60633   
+GDXIN   D:\kdianti\practice\AIMPLUM_NEWEST\exe\../output/gdx/SSP2_BaU_NoCC/TUR/2090.gdx
+--- LOAD  Y_preTUR = 2:VY_load
+60638   
+GDXIN   D:\kdianti\practice\AIMPLUM_NEWEST\exe\../output/gdx/SSP2_BaU_NoCC/TUR/2010.gdx
+--- LOAD  protect_wopasTUR = 18:protect_wopas
+60643   
+GDXIN   D:\kdianti\practice\AIMPLUM_NEWEST\exe\../output/gdx/SSP2_BaU_NoCC/TUR/2100.gdx
+60646  *$load PBIO%1=PBIO RAREA_BIOP%1=RAREA_BIOP
+--- LOAD  VYLTUR = 2:VY_load
+--- LOAD  pa_bioTUR = 21:pa_bio
+--- LOAD  pcTUR = 26:pc
+--- LOAD  CSTUR = 9:CS
+60649   
+60651   
+GDXIN   D:\kdianti\practice\AIMPLUM_NEWEST\exe\../output/gdx/base/TUR/basedata.gdx
+60653  *$load BIOENE%1=BIOENE
+--- LOAD  YIELDTUR = 5:YIELD
+60655   
+60656   
+60657  *PBIO(G,LB)$(PBIO%1(G,LB))=PBIO%1(G,LB);
+60658  *BIOENE(G)$(BIOENE%1(G))=BIOENE%1(G);
+60659  *RAREA_BIOP(G)$(RAREA_BIOP%1(G))=RAREA_BIOP%1(G);
+60660   
+60661  Y_pre("CL",G)$(Y_preTUR("CL",G))=Y_preTUR("CL",G);
+60662  *VYLCL(G)$(VYL%1("CL",G))=VYL%1("CL",G);
+60663   
+60664  VYL(L,G)$(VYLTUR(L,G))=VYLTUR(L,G);
+60665  protect_wopas(G)$(protect_wopasTUR(G))=protect_wopasTUR(G);
+60666  YIELDBIO(G)$(YIELDTUR("BIO",G))=YIELDTUR("BIO",G);
+60667  pa_bio(G)$(pa_bioTUR(G)) = pa_bioTUR(G);
+60668  pc_bio("TUR")$pcTUR("BIO")=pcTUR("BIO");
+60669  CS(G)$CSTUR(G)=CSTUR(G);
+BATINCLUDE D:\kdianti\practice\AIMPLUM_NEWEST\exe\../AIMPLUM2/inc_prog/BiolandR.gms
+60671  *-*-*-*- This program is included by ..\prog\Bioland.gms
+60672  parameter
+60673  *PBIO%1(G,LB)
+60674  *BIOENE%1(G) GJ per ha per year
+60675  *RAREA_BIOP%1(G) Ratio of area of biocrop in cell G in year Y [-]
+60676  Y_preXOC(LCL,G)
+60677  VYLXOC(L,G)
+60678  protect_wopasXOC(G)
+60679  pa_bioXOC(G)         land transition costs per unit area for BIO (million $ per ha)
+60680  YIELDXOC(LBIO,G)
+60681  pcXOC(LBIO)         land transition costs per unit area (million $ per ha)
+60682  CSXOC(G)         carbon density (MgC per ha)
+60683  CS(G)
+60684  ;
+60685   
+GDXIN   D:\kdianti\practice\AIMPLUM_NEWEST\exe\../output/gdx/SSP2_BaU_NoCC/XOC/2090.gdx
+--- LOAD  Y_preXOC = 2:VY_load
+60690   
+GDXIN   D:\kdianti\practice\AIMPLUM_NEWEST\exe\../output/gdx/SSP2_BaU_NoCC/XOC/2010.gdx
+--- LOAD  protect_wopasXOC = 18:protect_wopas
+60695   
+GDXIN   D:\kdianti\practice\AIMPLUM_NEWEST\exe\../output/gdx/SSP2_BaU_NoCC/XOC/2100.gdx
+60698  *$load PBIO%1=PBIO RAREA_BIOP%1=RAREA_BIOP
+--- LOAD  VYLXOC = 2:VY_load
+--- LOAD  pa_bioXOC = 21:pa_bio
+--- LOAD  pcXOC = 26:pc
+--- LOAD  CSXOC = 9:CS
+60701   
+60703   
+GDXIN   D:\kdianti\practice\AIMPLUM_NEWEST\exe\../output/gdx/base/XOC/basedata.gdx
+60705  *$load BIOENE%1=BIOENE
+--- LOAD  YIELDXOC = 5:YIELD
+60707   
+60708   
+60709  *PBIO(G,LB)$(PBIO%1(G,LB))=PBIO%1(G,LB);
+60710  *BIOENE(G)$(BIOENE%1(G))=BIOENE%1(G);
+60711  *RAREA_BIOP(G)$(RAREA_BIOP%1(G))=RAREA_BIOP%1(G);
+60712   
+60713  Y_pre("CL",G)$(Y_preXOC("CL",G))=Y_preXOC("CL",G);
+60714  *VYLCL(G)$(VYL%1("CL",G))=VYL%1("CL",G);
+60715   
+60716  VYL(L,G)$(VYLXOC(L,G))=VYLXOC(L,G);
+60717  protect_wopas(G)$(protect_wopasXOC(G))=protect_wopasXOC(G);
+60718  YIELDBIO(G)$(YIELDXOC("BIO",G))=YIELDXOC("BIO",G);
+60719  pa_bio(G)$(pa_bioXOC(G)) = pa_bioXOC(G);
+60720  pc_bio("XOC")$pcXOC("BIO")=pcXOC("BIO");
+60721  CS(G)$CSXOC(G)=CSXOC(G);
+BATINCLUDE D:\kdianti\practice\AIMPLUM_NEWEST\exe\../AIMPLUM2/inc_prog/BiolandR.gms
+60723  *-*-*-*- This program is included by ..\prog\Bioland.gms
+60724  parameter
+60725  *PBIO%1(G,LB)
+60726  *BIOENE%1(G) GJ per ha per year
+60727  *RAREA_BIOP%1(G) Ratio of area of biocrop in cell G in year Y [-]
+60728  Y_preCHN(LCL,G)
+60729  VYLCHN(L,G)
+60730  protect_wopasCHN(G)
+60731  pa_bioCHN(G)         land transition costs per unit area for BIO (million $ per ha)
+60732  YIELDCHN(LBIO,G)
+60733  pcCHN(LBIO)         land transition costs per unit area (million $ per ha)
+60734  CSCHN(G)         carbon density (MgC per ha)
+60735  CS(G)
+60736  ;
+60737   
+GDXIN   D:\kdianti\practice\AIMPLUM_NEWEST\exe\../output/gdx/SSP2_BaU_NoCC/CHN/2090.gdx
+--- LOAD  Y_preCHN = 2:VY_load
+60742   
+GDXIN   D:\kdianti\practice\AIMPLUM_NEWEST\exe\../output/gdx/SSP2_BaU_NoCC/CHN/2010.gdx
+--- LOAD  protect_wopasCHN = 18:protect_wopas
+60747   
+GDXIN   D:\kdianti\practice\AIMPLUM_NEWEST\exe\../output/gdx/SSP2_BaU_NoCC/CHN/2100.gdx
+60750  *$load PBIO%1=PBIO RAREA_BIOP%1=RAREA_BIOP
+--- LOAD  VYLCHN = 2:VY_load
+--- LOAD  pa_bioCHN = 21:pa_bio
+--- LOAD  pcCHN = 26:pc
+--- LOAD  CSCHN = 9:CS
+60753   
+60755   
+GDXIN   D:\kdianti\practice\AIMPLUM_NEWEST\exe\../output/gdx/base/CHN/basedata.gdx
+60757  *$load BIOENE%1=BIOENE
+--- LOAD  YIELDCHN = 5:YIELD
+60759   
+60760   
+60761  *PBIO(G,LB)$(PBIO%1(G,LB))=PBIO%1(G,LB);
+60762  *BIOENE(G)$(BIOENE%1(G))=BIOENE%1(G);
+60763  *RAREA_BIOP(G)$(RAREA_BIOP%1(G))=RAREA_BIOP%1(G);
+60764   
+60765  Y_pre("CL",G)$(Y_preCHN("CL",G))=Y_preCHN("CL",G);
+60766  *VYLCL(G)$(VYL%1("CL",G))=VYL%1("CL",G);
+60767   
+60768  VYL(L,G)$(VYLCHN(L,G))=VYLCHN(L,G);
+60769  protect_wopas(G)$(protect_wopasCHN(G))=protect_wopasCHN(G);
+60770  YIELDBIO(G)$(YIELDCHN("BIO",G))=YIELDCHN("BIO",G);
+60771  pa_bio(G)$(pa_bioCHN(G)) = pa_bioCHN(G);
+60772  pc_bio("CHN")$pcCHN("BIO")=pcCHN("BIO");
+60773  CS(G)$CSCHN(G)=CSCHN(G);
+BATINCLUDE D:\kdianti\practice\AIMPLUM_NEWEST\exe\../AIMPLUM2/inc_prog/BiolandR.gms
+60775  *-*-*-*- This program is included by ..\prog\Bioland.gms
+60776  parameter
+60777  *PBIO%1(G,LB)
+60778  *BIOENE%1(G) GJ per ha per year
+60779  *RAREA_BIOP%1(G) Ratio of area of biocrop in cell G in year Y [-]
+60780  Y_preIND(LCL,G)
+60781  VYLIND(L,G)
+60782  protect_wopasIND(G)
+60783  pa_bioIND(G)         land transition costs per unit area for BIO (million $ per ha)
+60784  YIELDIND(LBIO,G)
+60785  pcIND(LBIO)         land transition costs per unit area (million $ per ha)
+60786  CSIND(G)         carbon density (MgC per ha)
+60787  CS(G)
+60788  ;
+60789   
+GDXIN   D:\kdianti\practice\AIMPLUM_NEWEST\exe\../output/gdx/SSP2_BaU_NoCC/IND/2090.gdx
+--- LOAD  Y_preIND = 2:VY_load
+60794   
+GDXIN   D:\kdianti\practice\AIMPLUM_NEWEST\exe\../output/gdx/SSP2_BaU_NoCC/IND/2010.gdx
+--- LOAD  protect_wopasIND = 18:protect_wopas
+60799   
+GDXIN   D:\kdianti\practice\AIMPLUM_NEWEST\exe\../output/gdx/SSP2_BaU_NoCC/IND/2100.gdx
+60802  *$load PBIO%1=PBIO RAREA_BIOP%1=RAREA_BIOP
+--- LOAD  VYLIND = 2:VY_load
+--- LOAD  pa_bioIND = 21:pa_bio
+--- LOAD  pcIND = 26:pc
+--- LOAD  CSIND = 9:CS
+60805   
+60807   
+GDXIN   D:\kdianti\practice\AIMPLUM_NEWEST\exe\../output/gdx/base/IND/basedata.gdx
+60809  *$load BIOENE%1=BIOENE
+--- LOAD  YIELDIND = 5:YIELD
+60811   
+60812   
+60813  *PBIO(G,LB)$(PBIO%1(G,LB))=PBIO%1(G,LB);
+60814  *BIOENE(G)$(BIOENE%1(G))=BIOENE%1(G);
+60815  *RAREA_BIOP(G)$(RAREA_BIOP%1(G))=RAREA_BIOP%1(G);
+60816   
+60817  Y_pre("CL",G)$(Y_preIND("CL",G))=Y_preIND("CL",G);
+60818  *VYLCL(G)$(VYL%1("CL",G))=VYL%1("CL",G);
+60819   
+60820  VYL(L,G)$(VYLIND(L,G))=VYLIND(L,G);
+60821  protect_wopas(G)$(protect_wopasIND(G))=protect_wopasIND(G);
+60822  YIELDBIO(G)$(YIELDIND("BIO",G))=YIELDIND("BIO",G);
+60823  pa_bio(G)$(pa_bioIND(G)) = pa_bioIND(G);
+60824  pc_bio("IND")$pcIND("BIO")=pcIND("BIO");
+60825  CS(G)$CSIND(G)=CSIND(G);
+BATINCLUDE D:\kdianti\practice\AIMPLUM_NEWEST\exe\../AIMPLUM2/inc_prog/BiolandR.gms
+60827  *-*-*-*- This program is included by ..\prog\Bioland.gms
+60828  parameter
+60829  *PBIO%1(G,LB)
+60830  *BIOENE%1(G) GJ per ha per year
+60831  *RAREA_BIOP%1(G) Ratio of area of biocrop in cell G in year Y [-]
+60832  Y_preJPN(LCL,G)
+60833  VYLJPN(L,G)
+60834  protect_wopasJPN(G)
+60835  pa_bioJPN(G)         land transition costs per unit area for BIO (million $ per ha)
+60836  YIELDJPN(LBIO,G)
+60837  pcJPN(LBIO)         land transition costs per unit area (million $ per ha)
+60838  CSJPN(G)         carbon density (MgC per ha)
+60839  CS(G)
+60840  ;
+60841   
+GDXIN   D:\kdianti\practice\AIMPLUM_NEWEST\exe\../output/gdx/SSP2_BaU_NoCC/JPN/2090.gdx
+--- LOAD  Y_preJPN = 2:VY_load
+60846   
+GDXIN   D:\kdianti\practice\AIMPLUM_NEWEST\exe\../output/gdx/SSP2_BaU_NoCC/JPN/2010.gdx
+--- LOAD  protect_wopasJPN = 18:protect_wopas
+60851   
+GDXIN   D:\kdianti\practice\AIMPLUM_NEWEST\exe\../output/gdx/SSP2_BaU_NoCC/JPN/2100.gdx
+60854  *$load PBIO%1=PBIO RAREA_BIOP%1=RAREA_BIOP
+--- LOAD  VYLJPN = 2:VY_load
+--- LOAD  pa_bioJPN = 21:pa_bio
+--- LOAD  pcJPN = 26:pc
+--- LOAD  CSJPN = 9:CS
+60857   
+60859   
+GDXIN   D:\kdianti\practice\AIMPLUM_NEWEST\exe\../output/gdx/base/JPN/basedata.gdx
+60861  *$load BIOENE%1=BIOENE
+--- LOAD  YIELDJPN = 5:YIELD
+60863   
+60864   
+60865  *PBIO(G,LB)$(PBIO%1(G,LB))=PBIO%1(G,LB);
+60866  *BIOENE(G)$(BIOENE%1(G))=BIOENE%1(G);
+60867  *RAREA_BIOP(G)$(RAREA_BIOP%1(G))=RAREA_BIOP%1(G);
+60868   
+60869  Y_pre("CL",G)$(Y_preJPN("CL",G))=Y_preJPN("CL",G);
+60870  *VYLCL(G)$(VYL%1("CL",G))=VYL%1("CL",G);
+60871   
+60872  VYL(L,G)$(VYLJPN(L,G))=VYLJPN(L,G);
+60873  protect_wopas(G)$(protect_wopasJPN(G))=protect_wopasJPN(G);
+60874  YIELDBIO(G)$(YIELDJPN("BIO",G))=YIELDJPN("BIO",G);
+60875  pa_bio(G)$(pa_bioJPN(G)) = pa_bioJPN(G);
+60876  pc_bio("JPN")$pcJPN("BIO")=pcJPN("BIO");
+60877  CS(G)$CSJPN(G)=CSJPN(G);
+BATINCLUDE D:\kdianti\practice\AIMPLUM_NEWEST\exe\../AIMPLUM2/inc_prog/BiolandR.gms
+60879  *-*-*-*- This program is included by ..\prog\Bioland.gms
+60880  parameter
+60881  *PBIO%1(G,LB)
+60882  *BIOENE%1(G) GJ per ha per year
+60883  *RAREA_BIOP%1(G) Ratio of area of biocrop in cell G in year Y [-]
+60884  Y_preXSE(LCL,G)
+60885  VYLXSE(L,G)
+60886  protect_wopasXSE(G)
+60887  pa_bioXSE(G)         land transition costs per unit area for BIO (million $ per ha)
+60888  YIELDXSE(LBIO,G)
+60889  pcXSE(LBIO)         land transition costs per unit area (million $ per ha)
+60890  CSXSE(G)         carbon density (MgC per ha)
+60891  CS(G)
+60892  ;
+60893   
+GDXIN   D:\kdianti\practice\AIMPLUM_NEWEST\exe\../output/gdx/SSP2_BaU_NoCC/XSE/2090.gdx
+--- LOAD  Y_preXSE = 2:VY_load
+60898   
+GDXIN   D:\kdianti\practice\AIMPLUM_NEWEST\exe\../output/gdx/SSP2_BaU_NoCC/XSE/2010.gdx
+--- LOAD  protect_wopasXSE = 18:protect_wopas
+60903   
+GDXIN   D:\kdianti\practice\AIMPLUM_NEWEST\exe\../output/gdx/SSP2_BaU_NoCC/XSE/2100.gdx
+60906  *$load PBIO%1=PBIO RAREA_BIOP%1=RAREA_BIOP
+--- LOAD  VYLXSE = 2:VY_load
+--- LOAD  pa_bioXSE = 21:pa_bio
+--- LOAD  pcXSE = 26:pc
+--- LOAD  CSXSE = 9:CS
+60909   
+60911   
+GDXIN   D:\kdianti\practice\AIMPLUM_NEWEST\exe\../output/gdx/base/XSE/basedata.gdx
+60913  *$load BIOENE%1=BIOENE
+--- LOAD  YIELDXSE = 5:YIELD
+60915   
+60916   
+60917  *PBIO(G,LB)$(PBIO%1(G,LB))=PBIO%1(G,LB);
+60918  *BIOENE(G)$(BIOENE%1(G))=BIOENE%1(G);
+60919  *RAREA_BIOP(G)$(RAREA_BIOP%1(G))=RAREA_BIOP%1(G);
+60920   
+60921  Y_pre("CL",G)$(Y_preXSE("CL",G))=Y_preXSE("CL",G);
+60922  *VYLCL(G)$(VYL%1("CL",G))=VYL%1("CL",G);
+60923   
+60924  VYL(L,G)$(VYLXSE(L,G))=VYLXSE(L,G);
+60925  protect_wopas(G)$(protect_wopasXSE(G))=protect_wopasXSE(G);
+60926  YIELDBIO(G)$(YIELDXSE("BIO",G))=YIELDXSE("BIO",G);
+60927  pa_bio(G)$(pa_bioXSE(G)) = pa_bioXSE(G);
+60928  pc_bio("XSE")$pcXSE("BIO")=pcXSE("BIO");
+60929  CS(G)$CSXSE(G)=CSXSE(G);
+BATINCLUDE D:\kdianti\practice\AIMPLUM_NEWEST\exe\../AIMPLUM2/inc_prog/BiolandR.gms
+60931  *-*-*-*- This program is included by ..\prog\Bioland.gms
+60932  parameter
+60933  *PBIO%1(G,LB)
+60934  *BIOENE%1(G) GJ per ha per year
+60935  *RAREA_BIOP%1(G) Ratio of area of biocrop in cell G in year Y [-]
+60936  Y_preXSA(LCL,G)
+60937  VYLXSA(L,G)
+60938  protect_wopasXSA(G)
+60939  pa_bioXSA(G)         land transition costs per unit area for BIO (million $ per ha)
+60940  YIELDXSA(LBIO,G)
+60941  pcXSA(LBIO)         land transition costs per unit area (million $ per ha)
+60942  CSXSA(G)         carbon density (MgC per ha)
+60943  CS(G)
+60944  ;
+60945   
+GDXIN   D:\kdianti\practice\AIMPLUM_NEWEST\exe\../output/gdx/SSP2_BaU_NoCC/XSA/2090.gdx
+--- LOAD  Y_preXSA = 2:VY_load
+60950   
+GDXIN   D:\kdianti\practice\AIMPLUM_NEWEST\exe\../output/gdx/SSP2_BaU_NoCC/XSA/2010.gdx
+--- LOAD  protect_wopasXSA = 18:protect_wopas
+60955   
+GDXIN   D:\kdianti\practice\AIMPLUM_NEWEST\exe\../output/gdx/SSP2_BaU_NoCC/XSA/2100.gdx
+60958  *$load PBIO%1=PBIO RAREA_BIOP%1=RAREA_BIOP
+--- LOAD  VYLXSA = 2:VY_load
+--- LOAD  pa_bioXSA = 21:pa_bio
+--- LOAD  pcXSA = 26:pc
+--- LOAD  CSXSA = 9:CS
+60961   
+60963   
+GDXIN   D:\kdianti\practice\AIMPLUM_NEWEST\exe\../output/gdx/base/XSA/basedata.gdx
+60965  *$load BIOENE%1=BIOENE
+--- LOAD  YIELDXSA = 5:YIELD
+60967   
+60968   
+60969  *PBIO(G,LB)$(PBIO%1(G,LB))=PBIO%1(G,LB);
+60970  *BIOENE(G)$(BIOENE%1(G))=BIOENE%1(G);
+60971  *RAREA_BIOP(G)$(RAREA_BIOP%1(G))=RAREA_BIOP%1(G);
+60972   
+60973  Y_pre("CL",G)$(Y_preXSA("CL",G))=Y_preXSA("CL",G);
+60974  *VYLCL(G)$(VYL%1("CL",G))=VYL%1("CL",G);
+60975   
+60976  VYL(L,G)$(VYLXSA(L,G))=VYLXSA(L,G);
+60977  protect_wopas(G)$(protect_wopasXSA(G))=protect_wopasXSA(G);
+60978  YIELDBIO(G)$(YIELDXSA("BIO",G))=YIELDXSA("BIO",G);
+60979  pa_bio(G)$(pa_bioXSA(G)) = pa_bioXSA(G);
+60980  pc_bio("XSA")$pcXSA("BIO")=pcXSA("BIO");
+60981  CS(G)$CSXSA(G)=CSXSA(G);
+BATINCLUDE D:\kdianti\practice\AIMPLUM_NEWEST\exe\../AIMPLUM2/inc_prog/BiolandR.gms
+60983  *-*-*-*- This program is included by ..\prog\Bioland.gms
+60984  parameter
+60985  *PBIO%1(G,LB)
+60986  *BIOENE%1(G) GJ per ha per year
+60987  *RAREA_BIOP%1(G) Ratio of area of biocrop in cell G in year Y [-]
+60988  Y_preCAN(LCL,G)
+60989  VYLCAN(L,G)
+60990  protect_wopasCAN(G)
+60991  pa_bioCAN(G)         land transition costs per unit area for BIO (million $ per ha)
+60992  YIELDCAN(LBIO,G)
+60993  pcCAN(LBIO)         land transition costs per unit area (million $ per ha)
+60994  CSCAN(G)         carbon density (MgC per ha)
+60995  CS(G)
+60996  ;
+60997   
+60999  Y_preCAN(LCL,G)=0;
+61001   
+GDXIN   D:\kdianti\practice\AIMPLUM_NEWEST\exe\../output/gdx/SSP2_BaU_NoCC/CAN/2010.gdx
+--- LOAD  protect_wopasCAN = 18:protect_wopas
+61006   
+61008  *PBIO%1(G,LB)=0;
+61009  *RAREA_BIOP%1(G)=0;
+61010  VYLCAN(LCL,G)=0;
+61011  pa_bioCAN(G)=0;
+61012  pcCAN(LBIO)=0;
+61013  CSCAN(G)=0;
+61015   
+GDXIN   D:\kdianti\practice\AIMPLUM_NEWEST\exe\../output/gdx/base/CAN/basedata.gdx
+61017  *$load BIOENE%1=BIOENE
+--- LOAD  YIELDCAN = 5:YIELD
+61019   
+61020   
+61021  *PBIO(G,LB)$(PBIO%1(G,LB))=PBIO%1(G,LB);
+61022  *BIOENE(G)$(BIOENE%1(G))=BIOENE%1(G);
+61023  *RAREA_BIOP(G)$(RAREA_BIOP%1(G))=RAREA_BIOP%1(G);
+61024   
+61025  Y_pre("CL",G)$(Y_preCAN("CL",G))=Y_preCAN("CL",G);
+61026  *VYLCL(G)$(VYL%1("CL",G))=VYL%1("CL",G);
+61027   
+61028  VYL(L,G)$(VYLCAN(L,G))=VYLCAN(L,G);
+61029  protect_wopas(G)$(protect_wopasCAN(G))=protect_wopasCAN(G);
+61030  YIELDBIO(G)$(YIELDCAN("BIO",G))=YIELDCAN("BIO",G);
+61031  pa_bio(G)$(pa_bioCAN(G)) = pa_bioCAN(G);
+61032  pc_bio("CAN")$pcCAN("BIO")=pcCAN("BIO");
+61033  CS(G)$CSCAN(G)=CSCAN(G);
+BATINCLUDE D:\kdianti\practice\AIMPLUM_NEWEST\exe\../AIMPLUM2/inc_prog/BiolandR.gms
+61035  *-*-*-*- This program is included by ..\prog\Bioland.gms
+61036  parameter
+61037  *PBIO%1(G,LB)
+61038  *BIOENE%1(G) GJ per ha per year
+61039  *RAREA_BIOP%1(G) Ratio of area of biocrop in cell G in year Y [-]
+61040  Y_preBRA(LCL,G)
+61041  VYLBRA(L,G)
+61042  protect_wopasBRA(G)
+61043  pa_bioBRA(G)         land transition costs per unit area for BIO (million $ per ha)
+61044  YIELDBRA(LBIO,G)
+61045  pcBRA(LBIO)         land transition costs per unit area (million $ per ha)
+61046  CSBRA(G)         carbon density (MgC per ha)
+61047  CS(G)
+61048  ;
+61049   
+GDXIN   D:\kdianti\practice\AIMPLUM_NEWEST\exe\../output/gdx/SSP2_BaU_NoCC/BRA/2090.gdx
+--- LOAD  Y_preBRA = 2:VY_load
+61054   
+GDXIN   D:\kdianti\practice\AIMPLUM_NEWEST\exe\../output/gdx/SSP2_BaU_NoCC/BRA/2010.gdx
+--- LOAD  protect_wopasBRA = 18:protect_wopas
+61059   
+GDXIN   D:\kdianti\practice\AIMPLUM_NEWEST\exe\../output/gdx/SSP2_BaU_NoCC/BRA/2100.gdx
+61062  *$load PBIO%1=PBIO RAREA_BIOP%1=RAREA_BIOP
+--- LOAD  VYLBRA = 2:VY_load
+--- LOAD  pa_bioBRA = 21:pa_bio
+--- LOAD  pcBRA = 26:pc
+--- LOAD  CSBRA = 9:CS
+61065   
+61067   
+GDXIN   D:\kdianti\practice\AIMPLUM_NEWEST\exe\../output/gdx/base/BRA/basedata.gdx
+61069  *$load BIOENE%1=BIOENE
+--- LOAD  YIELDBRA = 5:YIELD
+61071   
+61072   
+61073  *PBIO(G,LB)$(PBIO%1(G,LB))=PBIO%1(G,LB);
+61074  *BIOENE(G)$(BIOENE%1(G))=BIOENE%1(G);
+61075  *RAREA_BIOP(G)$(RAREA_BIOP%1(G))=RAREA_BIOP%1(G);
+61076   
+61077  Y_pre("CL",G)$(Y_preBRA("CL",G))=Y_preBRA("CL",G);
+61078  *VYLCL(G)$(VYL%1("CL",G))=VYL%1("CL",G);
+61079   
+61080  VYL(L,G)$(VYLBRA(L,G))=VYLBRA(L,G);
+61081  protect_wopas(G)$(protect_wopasBRA(G))=protect_wopasBRA(G);
+61082  YIELDBIO(G)$(YIELDBRA("BIO",G))=YIELDBRA("BIO",G);
+61083  pa_bio(G)$(pa_bioBRA(G)) = pa_bioBRA(G);
+61084  pc_bio("BRA")$pcBRA("BIO")=pcBRA("BIO");
+61085  CS(G)$CSBRA(G)=CSBRA(G);
+BATINCLUDE D:\kdianti\practice\AIMPLUM_NEWEST\exe\../AIMPLUM2/inc_prog/BiolandR.gms
+61087  *-*-*-*- This program is included by ..\prog\Bioland.gms
+61088  parameter
+61089  *PBIO%1(G,LB)
+61090  *BIOENE%1(G) GJ per ha per year
+61091  *RAREA_BIOP%1(G) Ratio of area of biocrop in cell G in year Y [-]
+61092  Y_preXLM(LCL,G)
+61093  VYLXLM(L,G)
+61094  protect_wopasXLM(G)
+61095  pa_bioXLM(G)         land transition costs per unit area for BIO (million $ per ha)
+61096  YIELDXLM(LBIO,G)
+61097  pcXLM(LBIO)         land transition costs per unit area (million $ per ha)
+61098  CSXLM(G)         carbon density (MgC per ha)
+61099  CS(G)
+61100  ;
+61101   
+GDXIN   D:\kdianti\practice\AIMPLUM_NEWEST\exe\../output/gdx/SSP2_BaU_NoCC/XLM/2090.gdx
+--- LOAD  Y_preXLM = 2:VY_load
+61106   
+GDXIN   D:\kdianti\practice\AIMPLUM_NEWEST\exe\../output/gdx/SSP2_BaU_NoCC/XLM/2010.gdx
+--- LOAD  protect_wopasXLM = 18:protect_wopas
+61111   
+GDXIN   D:\kdianti\practice\AIMPLUM_NEWEST\exe\../output/gdx/SSP2_BaU_NoCC/XLM/2100.gdx
+61114  *$load PBIO%1=PBIO RAREA_BIOP%1=RAREA_BIOP
+--- LOAD  VYLXLM = 2:VY_load
+--- LOAD  pa_bioXLM = 21:pa_bio
+--- LOAD  pcXLM = 26:pc
+--- LOAD  CSXLM = 9:CS
+61117   
+61119   
+GDXIN   D:\kdianti\practice\AIMPLUM_NEWEST\exe\../output/gdx/base/XLM/basedata.gdx
+61121  *$load BIOENE%1=BIOENE
+--- LOAD  YIELDXLM = 5:YIELD
+61123   
+61124   
+61125  *PBIO(G,LB)$(PBIO%1(G,LB))=PBIO%1(G,LB);
+61126  *BIOENE(G)$(BIOENE%1(G))=BIOENE%1(G);
+61127  *RAREA_BIOP(G)$(RAREA_BIOP%1(G))=RAREA_BIOP%1(G);
+61128   
+61129  Y_pre("CL",G)$(Y_preXLM("CL",G))=Y_preXLM("CL",G);
+61130  *VYLCL(G)$(VYL%1("CL",G))=VYL%1("CL",G);
+61131   
+61132  VYL(L,G)$(VYLXLM(L,G))=VYLXLM(L,G);
+61133  protect_wopas(G)$(protect_wopasXLM(G))=protect_wopasXLM(G);
+61134  YIELDBIO(G)$(YIELDXLM("BIO",G))=YIELDXLM("BIO",G);
+61135  pa_bio(G)$(pa_bioXLM(G)) = pa_bioXLM(G);
+61136  pc_bio("XLM")$pcXLM("BIO")=pcXLM("BIO");
+61137  CS(G)$CSXLM(G)=CSXLM(G);
+BATINCLUDE D:\kdianti\practice\AIMPLUM_NEWEST\exe\../AIMPLUM2/inc_prog/BiolandR.gms
+61139  *-*-*-*- This program is included by ..\prog\Bioland.gms
+61140  parameter
+61141  *PBIO%1(G,LB)
+61142  *BIOENE%1(G) GJ per ha per year
+61143  *RAREA_BIOP%1(G) Ratio of area of biocrop in cell G in year Y [-]
+61144  Y_preCIS(LCL,G)
+61145  VYLCIS(L,G)
+61146  protect_wopasCIS(G)
+61147  pa_bioCIS(G)         land transition costs per unit area for BIO (million $ per ha)
+61148  YIELDCIS(LBIO,G)
+61149  pcCIS(LBIO)         land transition costs per unit area (million $ per ha)
+61150  CSCIS(G)         carbon density (MgC per ha)
+61151  CS(G)
+61152  ;
+61153   
+GDXIN   D:\kdianti\practice\AIMPLUM_NEWEST\exe\../output/gdx/SSP2_BaU_NoCC/CIS/2090.gdx
+--- LOAD  Y_preCIS = 2:VY_load
+61158   
+GDXIN   D:\kdianti\practice\AIMPLUM_NEWEST\exe\../output/gdx/SSP2_BaU_NoCC/CIS/2010.gdx
+--- LOAD  protect_wopasCIS = 18:protect_wopas
+61163   
+GDXIN   D:\kdianti\practice\AIMPLUM_NEWEST\exe\../output/gdx/SSP2_BaU_NoCC/CIS/2100.gdx
+61166  *$load PBIO%1=PBIO RAREA_BIOP%1=RAREA_BIOP
+--- LOAD  VYLCIS = 2:VY_load
+--- LOAD  pa_bioCIS = 21:pa_bio
+--- LOAD  pcCIS = 26:pc
+--- LOAD  CSCIS = 9:CS
+61169   
+61171   
+GDXIN   D:\kdianti\practice\AIMPLUM_NEWEST\exe\../output/gdx/base/CIS/basedata.gdx
+61173  *$load BIOENE%1=BIOENE
+--- LOAD  YIELDCIS = 5:YIELD
+61175   
+61176   
+61177  *PBIO(G,LB)$(PBIO%1(G,LB))=PBIO%1(G,LB);
+61178  *BIOENE(G)$(BIOENE%1(G))=BIOENE%1(G);
+61179  *RAREA_BIOP(G)$(RAREA_BIOP%1(G))=RAREA_BIOP%1(G);
+61180   
+61181  Y_pre("CL",G)$(Y_preCIS("CL",G))=Y_preCIS("CL",G);
+61182  *VYLCL(G)$(VYL%1("CL",G))=VYL%1("CL",G);
+61183   
+61184  VYL(L,G)$(VYLCIS(L,G))=VYLCIS(L,G);
+61185  protect_wopas(G)$(protect_wopasCIS(G))=protect_wopasCIS(G);
+61186  YIELDBIO(G)$(YIELDCIS("BIO",G))=YIELDCIS("BIO",G);
+61187  pa_bio(G)$(pa_bioCIS(G)) = pa_bioCIS(G);
+61188  pc_bio("CIS")$pcCIS("BIO")=pcCIS("BIO");
+61189  CS(G)$CSCIS(G)=CSCIS(G);
+BATINCLUDE D:\kdianti\practice\AIMPLUM_NEWEST\exe\../AIMPLUM2/inc_prog/BiolandR.gms
+61191  *-*-*-*- This program is included by ..\prog\Bioland.gms
+61192  parameter
+61193  *PBIO%1(G,LB)
+61194  *BIOENE%1(G) GJ per ha per year
+61195  *RAREA_BIOP%1(G) Ratio of area of biocrop in cell G in year Y [-]
+61196  Y_preXME(LCL,G)
+61197  VYLXME(L,G)
+61198  protect_wopasXME(G)
+61199  pa_bioXME(G)         land transition costs per unit area for BIO (million $ per ha)
+61200  YIELDXME(LBIO,G)
+61201  pcXME(LBIO)         land transition costs per unit area (million $ per ha)
+61202  CSXME(G)         carbon density (MgC per ha)
+61203  CS(G)
+61204  ;
+61205   
+61207  Y_preXME(LCL,G)=0;
+61209   
+61211  protect_wopasXME(G)=0;
+61213   
+61215  *PBIO%1(G,LB)=0;
+61216  *RAREA_BIOP%1(G)=0;
+61217  VYLXME(LCL,G)=0;
+61218  pa_bioXME(G)=0;
+61219  pcXME(LBIO)=0;
+61220  CSXME(G)=0;
+61222   
+GDXIN   D:\kdianti\practice\AIMPLUM_NEWEST\exe\../output/gdx/base/XME/basedata.gdx
+61224  *$load BIOENE%1=BIOENE
+--- LOAD  YIELDXME = 5:YIELD
+61226   
+61227   
+61228  *PBIO(G,LB)$(PBIO%1(G,LB))=PBIO%1(G,LB);
+61229  *BIOENE(G)$(BIOENE%1(G))=BIOENE%1(G);
+61230  *RAREA_BIOP(G)$(RAREA_BIOP%1(G))=RAREA_BIOP%1(G);
+61231   
+61232  Y_pre("CL",G)$(Y_preXME("CL",G))=Y_preXME("CL",G);
+61233  *VYLCL(G)$(VYL%1("CL",G))=VYL%1("CL",G);
+61234   
+61235  VYL(L,G)$(VYLXME(L,G))=VYLXME(L,G);
+61236  protect_wopas(G)$(protect_wopasXME(G))=protect_wopasXME(G);
+61237  YIELDBIO(G)$(YIELDXME("BIO",G))=YIELDXME("BIO",G);
+61238  pa_bio(G)$(pa_bioXME(G)) = pa_bioXME(G);
+61239  pc_bio("XME")$pcXME("BIO")=pcXME("BIO");
+61240  CS(G)$CSXME(G)=CSXME(G);
+BATINCLUDE D:\kdianti\practice\AIMPLUM_NEWEST\exe\../AIMPLUM2/inc_prog/BiolandR.gms
+61242  *-*-*-*- This program is included by ..\prog\Bioland.gms
+61243  parameter
+61244  *PBIO%1(G,LB)
+61245  *BIOENE%1(G) GJ per ha per year
+61246  *RAREA_BIOP%1(G) Ratio of area of biocrop in cell G in year Y [-]
+61247  Y_preXNF(LCL,G)
+61248  VYLXNF(L,G)
+61249  protect_wopasXNF(G)
+61250  pa_bioXNF(G)         land transition costs per unit area for BIO (million $ per ha)
+61251  YIELDXNF(LBIO,G)
+61252  pcXNF(LBIO)         land transition costs per unit area (million $ per ha)
+61253  CSXNF(G)         carbon density (MgC per ha)
+61254  CS(G)
+61255  ;
+61256   
+61258  Y_preXNF(LCL,G)=0;
+61260   
+61262  protect_wopasXNF(G)=0;
+61264   
+61266  *PBIO%1(G,LB)=0;
+61267  *RAREA_BIOP%1(G)=0;
+61268  VYLXNF(LCL,G)=0;
+61269  pa_bioXNF(G)=0;
+61270  pcXNF(LBIO)=0;
+61271  CSXNF(G)=0;
+61273   
+GDXIN   D:\kdianti\practice\AIMPLUM_NEWEST\exe\../output/gdx/base/XNF/basedata.gdx
+61275  *$load BIOENE%1=BIOENE
+--- LOAD  YIELDXNF = 5:YIELD
+61277   
+61278   
+61279  *PBIO(G,LB)$(PBIO%1(G,LB))=PBIO%1(G,LB);
+61280  *BIOENE(G)$(BIOENE%1(G))=BIOENE%1(G);
+61281  *RAREA_BIOP(G)$(RAREA_BIOP%1(G))=RAREA_BIOP%1(G);
+61282   
+61283  Y_pre("CL",G)$(Y_preXNF("CL",G))=Y_preXNF("CL",G);
+61284  *VYLCL(G)$(VYL%1("CL",G))=VYL%1("CL",G);
+61285   
+61286  VYL(L,G)$(VYLXNF(L,G))=VYLXNF(L,G);
+61287  protect_wopas(G)$(protect_wopasXNF(G))=protect_wopasXNF(G);
+61288  YIELDBIO(G)$(YIELDXNF("BIO",G))=YIELDXNF("BIO",G);
+61289  pa_bio(G)$(pa_bioXNF(G)) = pa_bioXNF(G);
+61290  pc_bio("XNF")$pcXNF("BIO")=pcXNF("BIO");
+61291  CS(G)$CSXNF(G)=CSXNF(G);
+BATINCLUDE D:\kdianti\practice\AIMPLUM_NEWEST\exe\../AIMPLUM2/inc_prog/BiolandR.gms
+61293  *-*-*-*- This program is included by ..\prog\Bioland.gms
+61294  parameter
+61295  *PBIO%1(G,LB)
+61296  *BIOENE%1(G) GJ per ha per year
+61297  *RAREA_BIOP%1(G) Ratio of area of biocrop in cell G in year Y [-]
+61298  Y_preXAF(LCL,G)
+61299  VYLXAF(L,G)
+61300  protect_wopasXAF(G)
+61301  pa_bioXAF(G)         land transition costs per unit area for BIO (million $ per ha)
+61302  YIELDXAF(LBIO,G)
+61303  pcXAF(LBIO)         land transition costs per unit area (million $ per ha)
+61304  CSXAF(G)         carbon density (MgC per ha)
+61305  CS(G)
+61306  ;
+61307   
+61309  Y_preXAF(LCL,G)=0;
+61311   
+61313  protect_wopasXAF(G)=0;
+61315   
+61317  *PBIO%1(G,LB)=0;
+61318  *RAREA_BIOP%1(G)=0;
+61319  VYLXAF(LCL,G)=0;
+61320  pa_bioXAF(G)=0;
+61321  pcXAF(LBIO)=0;
+61322  CSXAF(G)=0;
+61324   
+GDXIN   D:\kdianti\practice\AIMPLUM_NEWEST\exe\../output/gdx/base/XAF/basedata.gdx
+61326  *$load BIOENE%1=BIOENE
+--- LOAD  YIELDXAF = 5:YIELD
+61328   
+61329   
+61330  *PBIO(G,LB)$(PBIO%1(G,LB))=PBIO%1(G,LB);
+61331  *BIOENE(G)$(BIOENE%1(G))=BIOENE%1(G);
+61332  *RAREA_BIOP(G)$(RAREA_BIOP%1(G))=RAREA_BIOP%1(G);
+61333   
+61334  Y_pre("CL",G)$(Y_preXAF("CL",G))=Y_preXAF("CL",G);
+61335  *VYLCL(G)$(VYL%1("CL",G))=VYL%1("CL",G);
+61336   
+61337  VYL(L,G)$(VYLXAF(L,G))=VYLXAF(L,G);
+61338  protect_wopas(G)$(protect_wopasXAF(G))=protect_wopasXAF(G);
+61339  YIELDBIO(G)$(YIELDXAF("BIO",G))=YIELDXAF("BIO",G);
+61340  pa_bio(G)$(pa_bioXAF(G)) = pa_bioXAF(G);
+61341  pc_bio("XAF")$pcXAF("BIO")=pcXAF("BIO");
+61342  CS(G)$CSXAF(G)=CSXAF(G);
+61343   
+61344  set
+61345  A_BTR2 Biocrop residue4 /BTR2/
+61346  ;
+61347  parameter
+61348  TBI_load(*,Y,R,A_BTR2) Bioenergy use [ktoe per year]
+61349  TBI(Y,R,A_BTR2) Bioenergy use [ktoe per year]
+61350  EJ_ktoe         EJ_ktoe scaler [EJ per ktoe]
+61351  PBIOEXOQ        Global bioenergy amount (Biocrops + residue) [EJ per year] (exogenous)
+61352  PBIOEXOQ_2gen   Global bioenergy amount (Biocrops) [EJ per year] (exogenous)
+61353  trend2100
+61354  ;
+61355   
+61356  EJ_ktoe=41.8/1000000;
+61357   
+61358  *PBIO(G,Scol)=SUM(R,PBIOR(R,G,Scol));
+61359   
+61360  *---- Management factor for Biocrop yield ---*
+61361  set
+61362  YBASE/ 2005 /
+61363  ;
+61364  parameter
+61365  POP(*,YBASE,R)
+61366  GDP(*,YBASE,R)
+61367  GDPCAP_base(R)
+61368  Ppopulation(YBASE,R)
+61369  GDP_load(YBASE,R)
+61370  MF(R)      management factor for bio crops
+61371  MFA(R)     management factor for bio crops in base year
+61372  MFB(R)     management factor for bio crops (coefficient)
+61373  MFC(L)     accessibility factor for bio crops
+61374  MFAi(R)    inverce of management factor for bio crops in base year
+61375  MFArev(R)    inverce of management factor for bio crops in base year
+61376  ;
+61379   
+GDXIN   D:\kdianti\practice\AIMPLUM_NEWEST\exe\../data/analysis.gdx
+--- LOAD  POP = 1:POP
+--- LOAD  GDP = 2:GDP
+--- LOAD  TBI_load = 40:TBI
+61382  Ppopulation(YBASE,R)=POP("SSP2_BaU_NoCC",YBASE,R);
+61383  GDP_load(YBASE,R)=GDP("SSP2_BaU_NoCC",YBASE,R);
+61384  TBI(Y,R,A_BTR2)=TBI_load("SSP2_BaU_NoCC",Y,R,A_BTR2);
+61385   
+61386  GDPCAP_base(R)$Ppopulation("2005",R)=GDP_load("2005",R)/Ppopulation("2005",R);
+61387   
+61388  MFA(R)$(GDPCAP_base(R)>=1)=1;
+61389  MFA(R)$(GDPCAP_base(R)>0.35 AND GDPCAP_base(R)<1)=0.6;
+61390  MFA(R)$(GDPCAP_base(R)>0 AND GDPCAP_base(R)<=0.35)=0.4;
+61391   
+61392  MFB(R)$(GDPCAP_base(R)>=1)=1.005;
+61393  MFB(R)$(GDPCAP_base(R)>0.35 AND GDPCAP_base(R)<1)=1.01;
+61394  MFB(R)$(GDPCAP_base(R)>0 AND GDPCAP_base(R)<=0.35)=1.01;
+61395   
+61396   
+61397  MF(R)$MFA(R)=min(1.3/MFA(R),MFB(R)**max(0,2100-2010));
+61398   
+61399  YIELDBIO(G)$(YIELDBIO(G))=YIELDBIO(G)*SUM(R$MAP_RG(R,G),MF(R));
+61400   
+61401  *-------Potentail area for OLD bioenergy cropland ---*
+61402  parameter
+61403  YBIO_load(G)
+61404  YBIOO(G)        Potentail area for OLD bioenergy cropland
+61405  ;
+61406   
+GDXIN   D:\kdianti\practice\AIMPLUM_NEWEST\exe\../output/gdx/SSP2_BaU_NoCC/bio/2090.gdx
+--- LOAD  YBIO_load = 3:YBIO
+61411   
+61412  Y_pre("BIO",G)$YBIO_load(G)=YBIO_load(G);
+61413   
+61414  YBIOO(G)$(SUM(L$LCLBIO(L),Y_pre(L,G))-VYL("CL",G))=max(0,SUM(L$LCLBIO(L),Y_pre(L,G))-VYL("CL",G));
+61415   
+61416  *-------Bioenergy potential curve ---*
+61417   
+61418  parameter
+61419  BIOENE(G)       Bioenergy potential in cell G in year Y [GJ per ha per year]
+61420  RAREA_BIOP(G)   Ratio of potential area of biocrop in cell G in year Y [-]
+61421  GJ_toe  /41.8/
+61422  Rbg             Ratio of below-ground residues to above-ground biomass (IPCC guideline Table11.2) /0.20/
+61423  PBIO(G,LB)      Price
+61424  pca_bio(G,LB)    Cost for bioenergy production including land conversion cost (million $ per ha per year)
+61425  CSB(R)  Carbon density threshold for dividing grassland and forest (MgC per C)
+61426  Avalab_FL       availablilty of light forestland source: van Vuuren et al. 2009 /0.5/
+61427  Avalab_GL       availablilty of natural grassland source: van Vuuren et al. 2009 /0.5/
+61428  degradedland(G) Degraded land fraction (0 to 1)
+61429  degradedland_usable(G)
+61430  protectland(G)  Protected area fraction (0 to 1) of cell G (WDPA and IUCN)
+61431  ;
+61432   
+GDXIN   D:\kdianti\practice\AIMPLUM_NEWEST\exe\../AIMPLUM2/data/CSB.gdx
+--- LOAD  CSB = 1:CSB
+61435   
+61436  *** CROP_FLW --> BIO
+61437   
+61438  * [GJ/ha/year] = [tonC/ha] * [tonCrop/tonC]  * [toe/tonCrop] * [GJ/toe]
+61439  BIOENE(G)$(YIELDBIO(G)) = YIELDBIO(G) * 1/(1+Rbg) * 2.5 * 0.38 * GJ_toe;
+61440   
+61441  RAREA_BIOP(G) = 1-(SUM(L$(LNBIOP(L)),VYL(L,G))
+61442                    + protect_wopas(G)
+61443  *                 + VYL("FRSGL",G)$(CS(G)>SUM(R$MAP_RG(R,G),CSB(R)))
+61444                    + (VYL("FRSGL",G)-protect_wopas(G))$(VYL("FRSGL",G)>protect_wopas(G) AND CS(G)>=15)
+61445                    + (Avalab_FL*(VYL("FRSGL",G)-protect_wopas(G)))$(VYL("FRSGL",G)>protect_wopas(G) AND CS(G)<15 AND CS(G)>SUM(R$MAP_RG(R,G),CSB(R)))
+61446                    + (Avalab_GL*(VYL("FRSGL",G)-protect_wopas(G)))$(VYL("FRSGL",G)>protect_wopas(G) AND CS(G)<SUM(R$MAP_RG(R,G),CSB(R)))
+61447                    );
+61448  * adjust fraction
+GDXIN   D:\kdianti\practice\AIMPLUM_NEWEST\exe\../AIMPLUM2/data/policydata.gdx
+--- LOAD  protectland = 2:protect_all
+61452   
+61455  degradedland(G)=0;
+61456  degradedland_usable(G)$(degradedland(G)>0 AND RAREA_BIOP(G)>0) = degradedland(G) * (protect_wopas(G)/( protectland(G) + degradedland(G)))*0.5;
+61457  RAREA_BIOP(G)$(RAREA_BIOP(G)<10**(-5))=0;
+61458   
+61459  *[mil$/ha/year]
+61460  pca_bio(G,"BIOO")$(BIOENE(G) AND RAREA_BIOP(G))=SUM(R$MAP_RG(R,G),pc_bio(R));
+61461  pca_bio(G,"BION")$(BIOENE(G) AND RAREA_BIOP(G))=SUM(R$MAP_RG(R,G),pc_bio(R)) + pa_bio(G);
+61462  pca_bio(G,"BION_DEG")$(BIOENE(G))=SUM(R$MAP_RG(R,G),pc_bio(R)) + pa_bio(G);
+61463   
+61464  * [$/GJ] = [mil$/ha/year] / [GJ/ha/year] * 10**6
+61465  PBIO(G,LB)$(BIOENE(G) AND RAREA_BIOP(G))=pca_bio(G,LB)/BIOENE(G)*(10**6);
+61466   
+61467   
+61468  *-------Bioenergy potential curve output ---*
+61469   
+61471  set
+61472  Scol    /quantity,price,yield,area,fraction/
+61473  ;
+61474  parameter
+61475  PBIOSUP(G,LB,*) Biosupply curve data set fraction(grid-1) area (kha per grid) quantity (EJ per grid per year) price ($ per GJ) yield (MgC per ha per year)
+61476  ;
+61477   
+61478  * [grid-1]
+61479  PBIOSUP(G,"BIOO","fraction")$(BIOENE(G)) = min(YBIOO(G),RAREA_BIOP(G)) ;
+61480  * the new bioenergy fraction should deduced the
+61481  PBIOSUP(G,"BION","fraction")$(BIOENE(G)) = max(0, RAREA_BIOP(G)-YBIOO(G));
+61482  ** treat it as a new crop
+61483  PBIOSUP(G,"BION_DEG","fraction")$(BIOENE(G)) = max(0, degradedland_usable(G));
+61484  * [kha/grid]
+61485  PBIOSUP(G,LB,"area")$(BIOENE(G)) = PBIOSUP(G,LB,"fraction") * GA(G);
+61486   
+61487  * [EJ/grid/year] = [GJ/ha/year] * [kha/grid]
+61488  PBIOSUP(G,LB,"quantity")$(BIOENE(G)) = BIOENE(G) * PBIOSUP(G,LB,"area") / 10**6;
+61489  PBIOSUP(G,'BION',"quantity")$(BIOENE(G)) = BIOENE(G) * PBIOSUP(G,'BION',"area") / 10**6;
+61490  ** half yield reduction for bioenergy crops on degraded land
+61491  PBIOSUP(G,'BION_DEG',"quantity")$(BIOENE(G)) = BIOENE(G)/2 * PBIOSUP(G,'BION_DEG',"area") / 10**6;
+61492   
+61493  * [$/GJ] = [mil$/ha/year] / [GJ/ha/year] * 10**6
+61494  * PBIOSUP(G,LB,"price")$(BIOENE(G) AND RAREA_BIOP(G) AND PBIOSUP(G,LB,"quantity")>0) = pca_bio(G,LB) * PBIOSUP(G,LB,"area")/PBIOSUP(G,LB,"quantity");
+61495  * PBIOSUP(G,LB,"price")$(BIOENE(G) AND PBIOSUP(G,LB,"quantity")>0) = pca_bio(G,LB) * PBIOSUP(G,LB,"area")/PBIOSUP(G,LB,"quantity");
+61496  PBIOSUP(G,"BIOO","price")$(BIOENE(G) AND PBIOSUP(G,"BIOO","quantity")>0) = pca_bio(G,"BIOO") * PBIOSUP(G,"BIOO","area")/PBIOSUP(G,"BIOO","quantity");
+61497  PBIOSUP(G,"BION","price")$(BIOENE(G) AND PBIOSUP(G,"BION","quantity")>0) = pca_bio(G,"BION") * PBIOSUP(G,"BION","area")/PBIOSUP(G,"BION","quantity");
+61498  PBIOSUP(G,"BION_DEG","price")$(BIOENE(G) AND PBIOSUP(G,"BION_DEG","quantity")>0) = pca_bio(G,"BION_DEG") * PBIOSUP(G,"BION_DEG","area")/PBIOSUP(G,"BION_DEG","quantity");
+61499  * [$/GJ] = [mil$/ha/year] / [GJ/ha/year] * 10**6
+61500  PBIOSUP(G,LB,"price")$(BIOENE(G) AND RAREA_BIOP(G)) = pca_bio(G,LB)/BIOENE(G)*(10**6);
+61501   
+61502  *[MgC/ha/year]
+61503  PBIOSUP(G,LB,"yield")$(BIOENE(G) AND RAREA_BIOP(G)) = YIELDBIO(G);
+61504  PBIOSUP(G,"BION_DEG","yield")$(BIOENE(G) AND RAREA_BIOP(G)) = YIELDBIO(G)/2;
+61505  PBIOSUP(G,"BION_DEG","yield")$(BIOENE(G)) = YIELDBIO(G)/2;
+61506   
+61507  PBIOSUP(G,LB,Scol)$(NOT PBIOSUP(G,LB,"area"))=0;
+61508   
+61509   
+61511   
+61512   
+61513   
+61514  *--- Equation
+61515  parameter
+61516  Psol_stat(*)                  Solution report
+61517  ;
+61518   
+61519  Variable
+61520  VQ      Total production
+61521  VC      Total cost []
+61522  VYBIO(G,LB)     fractions of area for biocrops [grid-1]
+61523  ;
+61524  Equation
+61525  EQVQ            total production
+61526  EQVC            total production cost
+61527  EQVYBIO(G)      area fractions of bioenergy cropland
+61528  EQVYBIOO(G)     area fractions of old bioenergy cropland
+61529  EQCONS  global bioenergy demand constraint
+61530  ;
+61531   
+61532  VYBIO.LO(G,LB)=0;
+61533  *VYBIO.L(G,"BIOO")$(BIOENE(G)) = min(YBIOO(G),RAREA_BIOP(G));
+61534  *VYBIO.L(G,"BION")$(BIOENE(G)) = max(0, RAREA_BIOP(G)-YBIOO(G));
+61535   
+61536  VYBIO.FX(G,"BIOO")$(YBIOO(G)<=0)=0;
+61537  *VYBIO.FX(G,"BIOO")$(BIOENE(G)) = min(YBIOO(G),RAREA_BIOP(G));
+61538  VYBIO.FX(G,LB)$(NOT (BIOENE(G) AND RAREA_BIOP(G)))=0;
+61539   
+61540   
+61542   
+61543   
+61544  YBIOLB(G,LB)$VYBIO.L(G,LB)=VYBIO.L(G,LB);
+61545  YBIO(G)$(SUM(LB,VYBIO.L(G,LB)))=SUM(LB,VYBIO.L(G,LB));
+61546   
+61547  parameter
+61548  AREA_BIOP(R,LB)    Area of biocrop in region R in year Y [kha per year]
+61549  YIELD_BIOP(R,LB)    Yield of biocrop in region R in year Y [tonCrop per ha]
+61550  TOTAREA_BIOP(R)    Total potential area of biocrop in region R in year Y [kha per year]
+61551  TOTBIOENE(R)    Total technical bioenergy potential [EJ per year]
+61552  ;
+61553   
+61554   
+61555  AREA_BIOP(R,LB)=SUM(G$MAP_RG(R,G),VYBIO.L(G,LB)*GA(G));
+61556  AREA_BIOP(Sr,LB)=SUM(R$MAP_RAGG(R,Sr),AREA_BIOP(R,LB));
+61557   
+61558  YIELD_BIOP(R,LB)$SUM(G$MAP_RG(R,G),VYBIO.L(G,LB)*GA(G))=SUM(G$MAP_RG(R,G),YIELDBIO(G)*VYBIO.L(G,LB)*GA(G))/SUM(G$MAP_RG(R,G),VYBIO.L(G,LB)*GA(G)) * 1/(1+Rbg) * 2.5;
+61559   
+61560  YIELD_BIOP(Sr,LB)$SUM(R$(MAP_RAGG(R,Sr) and AREA_BIOP(R,LB)*YIELD_BIOP(R,LB)),AREA_BIOP(R,LB))
+61561  =SUM(R$(MAP_RAGG(R,Sr) and AREA_BIOP(R,LB)*YIELD_BIOP(R,LB)),AREA_BIOP(R,LB)*YIELD_BIOP(R,LB))/SUM(R$(MAP_RAGG(R,Sr) and AREA_BIOP(R,LB)*YIELD_BIOP(R,LB)),AREA_BIOP(R,LB));
+61562   
+61563  TOTAREA_BIOP(R)=SUM(G$MAP_RG(R,G),RAREA_BIOP(G)*GA(G));
+61564  TOTAREA_BIOP(Sr)=SUM(R$MAP_RAGG(R,Sr),TOTAREA_BIOP(R));
+61565   
+61566  TOTBIOENE(R)=SUM(G$MAP_RG(R,G),BIOENE(G)*RAREA_BIOP(G)*GA(G)) / 10**6;
+61567  TOTBIOENE(Sr)=SUM(R$MAP_RAGG(R,Sr),TOTBIOENE(R));
+61568   
+61569  *-----------------------------------*
+61570   
+61571  *-----EMF33
+61572  *$ontext
+61573  parameter
+61574  PCBIO(R)        average price to meet the given bioenergy amount [$ per GJ]
+61575  QCBIO(R)        quantity to meet the given bioenergy price [EJ per year]
+61576  ;
+61577   
+61578  PCBIO(R)$SUM(LB,SUM(G$(MAP_RG(R,G) AND PBIO(G,LB)*BIOENE(G)*YBIOLB(G,LB)),BIOENE(G) * GA(G) *YBIOLB(G,LB)))
+61579          =SUM(LB,SUM(G$(MAP_RG(R,G) AND PBIO(G,LB)*BIOENE(G)*YBIOLB(G,LB)),PBIO(G,LB)*BIOENE(G) * GA(G) *YBIOLB(G,LB)))
+61580                  /SUM(LB,SUM(G$(MAP_RG(R,G) AND PBIO(G,LB)*BIOENE(G)*YBIOLB(G,LB)), BIOENE(G) * GA(G) *YBIOLB(G,LB)));
+61581   
+61582  QCBIO(R)=SUM(LB,SUM(G$(MAP_RG(R,G) AND BIOENE(G)*YBIOLB(G,LB)), BIOENE(G) * GA(G) * YBIOLB(G,LB)))/ 10**6;
+61583   
+61584  * regional aggregation
+61585  PCBIO(Sr)$SUM(R$(MAP_RAGG(R,Sr) AND QCBIO(R)*PCBIO(R)),QCBIO(R))
+61586          = SUM(R$(MAP_RAGG(R,Sr) AND QCBIO(R)*PCBIO(R)),QCBIO(R)*PCBIO(R))
+61587           /SUM(R$(MAP_RAGG(R,Sr) AND QCBIO(R)*PCBIO(R)),QCBIO(R));
+61588  QCBIO(Sr)= SUM(R$MAP_RAGG(R,Sr),QCBIO(R));
+61589   
+61590  *-------------------------
+61591  *$offtext
+61592   
+61594   
+61595  execute_unload '../output/gdx/SSP2_BaU_NoCC/bio/2100.gdx'
+61596  pca_bio
+61597  YBIOLB
+61598  YBIO
+61599  *VYBIOYBIO
+61600  PCBIO
+61601  QCBIO
+61602  AREA_BIOP
+61603  YIELD_BIOP
+61604  TOTAREA_BIOP
+61605  Psol_stat
+61606  BIOENE
+61607  PBIO
+61608  GDPCAP_base
+61609  MF
+61610  TOTBIOENE
+61611  YIELDBIO
+61612  degradedland
+61613  degradedland_usable
+61614  PBIOSUP
+61615  RAREA_BIOP;
+61616   
+EXIT D:\kdianti\practice\AIMPLUM_NEWEST\exe\../AIMPLUM2/prog/Bioland.gms
+GAMS 37.1.0  r07954d5 Released Nov 11, 2021 WEX-WEI x86 64bit/MS Windows - 06/20/23 17:55:56 Page 2
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Include File Summary
+
+
+   SEQ   GLOBAL TYPE      PARENT   LOCAL  FILENAME
+
+     1        1 INPUT          0       0  D:\kdianti\practice\AIMPLUM_NEWEST\exe\../AIMPLUM2/prog/Bioland.gms
+     2       20 INCLUDE        1      20  .D:\kdianti\practice\AIMPLUM_NEWEST\exe\../AIMPLUM2/inc_prog/pre_10year.gms
+     3       39 INCLUDE        1      21  .D:\kdianti\practice\AIMPLUM_NEWEST\exe\../AIMPLUM2/inc_prog/second_10year.gms
+     4       51 INCLUDE        1      26  .D:\kdianti\practice\AIMPLUM_NEWEST\exe\../AIMPLUM2/scenario/socioeconomic/SSP2.gms
+     5       59 INCLUDE        1      30  .D:\kdianti\practice\AIMPLUM_NEWEST\exe\../AIMPLUM2/define/region/region17.set
+     6       85 INCLUDE        1      39  .D:\kdianti\practice\AIMPLUM_NEWEST\exe\../AIMPLUM2/define/set_g/G_USA.set
+     7     4552 INCLUDE        1      40  .D:\kdianti\practice\AIMPLUM_NEWEST\exe\../AIMPLUM2/define/set_g/G_XE25.set
+     8     6743 INCLUDE        1      41  .D:\kdianti\practice\AIMPLUM_NEWEST\exe\../AIMPLUM2/define/set_g/G_XER.set
+     9     7513 INCLUDE        1      42  .D:\kdianti\practice\AIMPLUM_NEWEST\exe\../AIMPLUM2/define/set_g/G_TUR.set
+    10     7844 INCLUDE        1      43  .D:\kdianti\practice\AIMPLUM_NEWEST\exe\../AIMPLUM2/define/set_g/G_XOC.set
+    11    10797 INCLUDE        1      44  .D:\kdianti\practice\AIMPLUM_NEWEST\exe\../AIMPLUM2/define/set_g/G_CHN.set
+    12    14590 INCLUDE        1      45  .D:\kdianti\practice\AIMPLUM_NEWEST\exe\../AIMPLUM2/define/set_g/G_IND.set
+    13    15760 INCLUDE        1      46  .D:\kdianti\practice\AIMPLUM_NEWEST\exe\../AIMPLUM2/define/set_g/G_JPN.set
+    14    15941 INCLUDE        1      47  .D:\kdianti\practice\AIMPLUM_NEWEST\exe\../AIMPLUM2/define/set_g/G_XSE.set
+    15    18395 INCLUDE        1      48  .D:\kdianti\practice\AIMPLUM_NEWEST\exe\../AIMPLUM2/define/set_g/G_XSA.set
+    16    19298 INCLUDE        1      49  .D:\kdianti\practice\AIMPLUM_NEWEST\exe\../AIMPLUM2/define/set_g/G_CAN.set
+    17    26180 INCLUDE        1      50  .D:\kdianti\practice\AIMPLUM_NEWEST\exe\../AIMPLUM2/define/set_g/G_BRA.set
+    18    29031 INCLUDE        1      51  .D:\kdianti\practice\AIMPLUM_NEWEST\exe\../AIMPLUM2/define/set_g/G_XLM.set
+    19    34136 INCLUDE        1      52  .D:\kdianti\practice\AIMPLUM_NEWEST\exe\../AIMPLUM2/define/set_g/G_CIS.set
+    20    48254 INCLUDE        1      53  .D:\kdianti\practice\AIMPLUM_NEWEST\exe\../AIMPLUM2/define/set_g/G_XME.set
+    21    50157 INCLUDE        1      54  .D:\kdianti\practice\AIMPLUM_NEWEST\exe\../AIMPLUM2/define/set_g/G_XNF.set
+    22    52274 INCLUDE        1      55  .D:\kdianti\practice\AIMPLUM_NEWEST\exe\../AIMPLUM2/define/set_g/G_XAF.set
+    23    60406 INCLUDE        1      88  .D:\kdianti\practice\AIMPLUM_NEWEST\exe\../AIMPLUM2/define/region/region17_agg.map
+    24    60459 GDXIN          1     105  D:\kdianti\practice\AIMPLUM_NEWEST\exe\../AIMPLUM2/data/data_prep.gdx
+    25    60462 BATINCLUDE     1     108  .D:\kdianti\practice\AIMPLUM_NEWEST\exe\../AIMPLUM2/inc_prog/BiolandR.gms
+    26    60478 IF EXIST      25      16  .D:\kdianti\practice\AIMPLUM_NEWEST\exe\../output/gdx/SSP2_BaU_NoCC/USA/2090.gdx
+    27    60479 GDXIN         25      17  .D:\kdianti\practice\AIMPLUM_NEWEST\exe\../output/gdx/SSP2_BaU_NoCC/USA/2090.gdx
+    28    60483 IF EXIST      25      23  .D:\kdianti\practice\AIMPLUM_NEWEST\exe\../output/gdx/SSP2_BaU_NoCC/USA/2010.gdx
+    29    60484 GDXIN         25      24  .D:\kdianti\practice\AIMPLUM_NEWEST\exe\../output/gdx/SSP2_BaU_NoCC/USA/2010.gdx
+    30    60488 IF EXIST      25      30  .D:\kdianti\practice\AIMPLUM_NEWEST\exe\../output/gdx/SSP2_BaU_NoCC/USA/2100.gdx
+    31    60489 GDXIN         25      31  .D:\kdianti\practice\AIMPLUM_NEWEST\exe\../output/gdx/SSP2_BaU_NoCC/USA/2100.gdx
+    32    60496 GDXIN         25      45  .D:\kdianti\practice\AIMPLUM_NEWEST\exe\../output/gdx/base/USA/basedata.gdx
+    33    60514 BATINCLUDE     1     109  .D:\kdianti\practice\AIMPLUM_NEWEST\exe\../AIMPLUM2/inc_prog/BiolandR.gms
+    34    60530 IF EXIST      33      16  .D:\kdianti\practice\AIMPLUM_NEWEST\exe\../output/gdx/SSP2_BaU_NoCC/XE25/2090.gdx
+    35    60531 GDXIN         33      17  .D:\kdianti\practice\AIMPLUM_NEWEST\exe\../output/gdx/SSP2_BaU_NoCC/XE25/2090.gdx
+    36    60535 IF EXIST      33      23  .D:\kdianti\practice\AIMPLUM_NEWEST\exe\../output/gdx/SSP2_BaU_NoCC/XE25/2010.gdx
+    37    60536 GDXIN         33      24  .D:\kdianti\practice\AIMPLUM_NEWEST\exe\../output/gdx/SSP2_BaU_NoCC/XE25/2010.gdx
+    38    60540 IF EXIST      33      30  .D:\kdianti\practice\AIMPLUM_NEWEST\exe\../output/gdx/SSP2_BaU_NoCC/XE25/2100.gdx
+    39    60541 GDXIN         33      31  .D:\kdianti\practice\AIMPLUM_NEWEST\exe\../output/gdx/SSP2_BaU_NoCC/XE25/2100.gdx
+    40    60548 GDXIN         33      45  .D:\kdianti\practice\AIMPLUM_NEWEST\exe\../output/gdx/base/XE25/basedata.gdx
+    41    60566 BATINCLUDE     1     110  .D:\kdianti\practice\AIMPLUM_NEWEST\exe\../AIMPLUM2/inc_prog/BiolandR.gms
+    42    60582 IF EXIST      41      16  .D:\kdianti\practice\AIMPLUM_NEWEST\exe\../output/gdx/SSP2_BaU_NoCC/XER/2090.gdx
+    43    60583 GDXIN         41      17  .D:\kdianti\practice\AIMPLUM_NEWEST\exe\../output/gdx/SSP2_BaU_NoCC/XER/2090.gdx
+    44    60587 IF EXIST      41      23  .D:\kdianti\practice\AIMPLUM_NEWEST\exe\../output/gdx/SSP2_BaU_NoCC/XER/2010.gdx
+    45    60588 GDXIN         41      24  .D:\kdianti\practice\AIMPLUM_NEWEST\exe\../output/gdx/SSP2_BaU_NoCC/XER/2010.gdx
+    46    60592 IF EXIST      41      30  .D:\kdianti\practice\AIMPLUM_NEWEST\exe\../output/gdx/SSP2_BaU_NoCC/XER/2100.gdx
+    47    60593 GDXIN         41      31  .D:\kdianti\practice\AIMPLUM_NEWEST\exe\../output/gdx/SSP2_BaU_NoCC/XER/2100.gdx
+    48    60600 GDXIN         41      45  .D:\kdianti\practice\AIMPLUM_NEWEST\exe\../output/gdx/base/XER/basedata.gdx
+    49    60618 BATINCLUDE     1     111  .D:\kdianti\practice\AIMPLUM_NEWEST\exe\../AIMPLUM2/inc_prog/BiolandR.gms
+    50    60634 IF EXIST      49      16  .D:\kdianti\practice\AIMPLUM_NEWEST\exe\../output/gdx/SSP2_BaU_NoCC/TUR/2090.gdx
+    51    60635 GDXIN         49      17  .D:\kdianti\practice\AIMPLUM_NEWEST\exe\../output/gdx/SSP2_BaU_NoCC/TUR/2090.gdx
+    52    60639 IF EXIST      49      23  .D:\kdianti\practice\AIMPLUM_NEWEST\exe\../output/gdx/SSP2_BaU_NoCC/TUR/2010.gdx
+    53    60640 GDXIN         49      24  .D:\kdianti\practice\AIMPLUM_NEWEST\exe\../output/gdx/SSP2_BaU_NoCC/TUR/2010.gdx
+    54    60644 IF EXIST      49      30  .D:\kdianti\practice\AIMPLUM_NEWEST\exe\../output/gdx/SSP2_BaU_NoCC/TUR/2100.gdx
+    55    60645 GDXIN         49      31  .D:\kdianti\practice\AIMPLUM_NEWEST\exe\../output/gdx/SSP2_BaU_NoCC/TUR/2100.gdx
+    56    60652 GDXIN         49      45  .D:\kdianti\practice\AIMPLUM_NEWEST\exe\../output/gdx/base/TUR/basedata.gdx
+    57    60670 BATINCLUDE     1     112  .D:\kdianti\practice\AIMPLUM_NEWEST\exe\../AIMPLUM2/inc_prog/BiolandR.gms
+    58    60686 IF EXIST      57      16  .D:\kdianti\practice\AIMPLUM_NEWEST\exe\../output/gdx/SSP2_BaU_NoCC/XOC/2090.gdx
+    59    60687 GDXIN         57      17  .D:\kdianti\practice\AIMPLUM_NEWEST\exe\../output/gdx/SSP2_BaU_NoCC/XOC/2090.gdx
+    60    60691 IF EXIST      57      23  .D:\kdianti\practice\AIMPLUM_NEWEST\exe\../output/gdx/SSP2_BaU_NoCC/XOC/2010.gdx
+    61    60692 GDXIN         57      24  .D:\kdianti\practice\AIMPLUM_NEWEST\exe\../output/gdx/SSP2_BaU_NoCC/XOC/2010.gdx
+    62    60696 IF EXIST      57      30  .D:\kdianti\practice\AIMPLUM_NEWEST\exe\../output/gdx/SSP2_BaU_NoCC/XOC/2100.gdx
+    63    60697 GDXIN         57      31  .D:\kdianti\practice\AIMPLUM_NEWEST\exe\../output/gdx/SSP2_BaU_NoCC/XOC/2100.gdx
+    64    60704 GDXIN         57      45  .D:\kdianti\practice\AIMPLUM_NEWEST\exe\../output/gdx/base/XOC/basedata.gdx
+    65    60722 BATINCLUDE     1     113  .D:\kdianti\practice\AIMPLUM_NEWEST\exe\../AIMPLUM2/inc_prog/BiolandR.gms
+    66    60738 IF EXIST      65      16  .D:\kdianti\practice\AIMPLUM_NEWEST\exe\../output/gdx/SSP2_BaU_NoCC/CHN/2090.gdx
+    67    60739 GDXIN         65      17  .D:\kdianti\practice\AIMPLUM_NEWEST\exe\../output/gdx/SSP2_BaU_NoCC/CHN/2090.gdx
+    68    60743 IF EXIST      65      23  .D:\kdianti\practice\AIMPLUM_NEWEST\exe\../output/gdx/SSP2_BaU_NoCC/CHN/2010.gdx
+    69    60744 GDXIN         65      24  .D:\kdianti\practice\AIMPLUM_NEWEST\exe\../output/gdx/SSP2_BaU_NoCC/CHN/2010.gdx
+    70    60748 IF EXIST      65      30  .D:\kdianti\practice\AIMPLUM_NEWEST\exe\../output/gdx/SSP2_BaU_NoCC/CHN/2100.gdx
+    71    60749 GDXIN         65      31  .D:\kdianti\practice\AIMPLUM_NEWEST\exe\../output/gdx/SSP2_BaU_NoCC/CHN/2100.gdx
+    72    60756 GDXIN         65      45  .D:\kdianti\practice\AIMPLUM_NEWEST\exe\../output/gdx/base/CHN/basedata.gdx
+    73    60774 BATINCLUDE     1     114  .D:\kdianti\practice\AIMPLUM_NEWEST\exe\../AIMPLUM2/inc_prog/BiolandR.gms
+    74    60790 IF EXIST      73      16  .D:\kdianti\practice\AIMPLUM_NEWEST\exe\../output/gdx/SSP2_BaU_NoCC/IND/2090.gdx
+    75    60791 GDXIN         73      17  .D:\kdianti\practice\AIMPLUM_NEWEST\exe\../output/gdx/SSP2_BaU_NoCC/IND/2090.gdx
+    76    60795 IF EXIST      73      23  .D:\kdianti\practice\AIMPLUM_NEWEST\exe\../output/gdx/SSP2_BaU_NoCC/IND/2010.gdx
+    77    60796 GDXIN         73      24  .D:\kdianti\practice\AIMPLUM_NEWEST\exe\../output/gdx/SSP2_BaU_NoCC/IND/2010.gdx
+    78    60800 IF EXIST      73      30  .D:\kdianti\practice\AIMPLUM_NEWEST\exe\../output/gdx/SSP2_BaU_NoCC/IND/2100.gdx
+    79    60801 GDXIN         73      31  .D:\kdianti\practice\AIMPLUM_NEWEST\exe\../output/gdx/SSP2_BaU_NoCC/IND/2100.gdx
+    80    60808 GDXIN         73      45  .D:\kdianti\practice\AIMPLUM_NEWEST\exe\../output/gdx/base/IND/basedata.gdx
+    81    60826 BATINCLUDE     1     115  .D:\kdianti\practice\AIMPLUM_NEWEST\exe\../AIMPLUM2/inc_prog/BiolandR.gms
+    82    60842 IF EXIST      81      16  .D:\kdianti\practice\AIMPLUM_NEWEST\exe\../output/gdx/SSP2_BaU_NoCC/JPN/2090.gdx
+    83    60843 GDXIN         81      17  .D:\kdianti\practice\AIMPLUM_NEWEST\exe\../output/gdx/SSP2_BaU_NoCC/JPN/2090.gdx
+    84    60847 IF EXIST      81      23  .D:\kdianti\practice\AIMPLUM_NEWEST\exe\../output/gdx/SSP2_BaU_NoCC/JPN/2010.gdx
+    85    60848 GDXIN         81      24  .D:\kdianti\practice\AIMPLUM_NEWEST\exe\../output/gdx/SSP2_BaU_NoCC/JPN/2010.gdx
+    86    60852 IF EXIST      81      30  .D:\kdianti\practice\AIMPLUM_NEWEST\exe\../output/gdx/SSP2_BaU_NoCC/JPN/2100.gdx
+    87    60853 GDXIN         81      31  .D:\kdianti\practice\AIMPLUM_NEWEST\exe\../output/gdx/SSP2_BaU_NoCC/JPN/2100.gdx
+    88    60860 GDXIN         81      45  .D:\kdianti\practice\AIMPLUM_NEWEST\exe\../output/gdx/base/JPN/basedata.gdx
+    89    60878 BATINCLUDE     1     116  .D:\kdianti\practice\AIMPLUM_NEWEST\exe\../AIMPLUM2/inc_prog/BiolandR.gms
+    90    60894 IF EXIST      89      16  .D:\kdianti\practice\AIMPLUM_NEWEST\exe\../output/gdx/SSP2_BaU_NoCC/XSE/2090.gdx
+    91    60895 GDXIN         89      17  .D:\kdianti\practice\AIMPLUM_NEWEST\exe\../output/gdx/SSP2_BaU_NoCC/XSE/2090.gdx
+    92    60899 IF EXIST      89      23  .D:\kdianti\practice\AIMPLUM_NEWEST\exe\../output/gdx/SSP2_BaU_NoCC/XSE/2010.gdx
+    93    60900 GDXIN         89      24  .D:\kdianti\practice\AIMPLUM_NEWEST\exe\../output/gdx/SSP2_BaU_NoCC/XSE/2010.gdx
+    94    60904 IF EXIST      89      30  .D:\kdianti\practice\AIMPLUM_NEWEST\exe\../output/gdx/SSP2_BaU_NoCC/XSE/2100.gdx
+    95    60905 GDXIN         89      31  .D:\kdianti\practice\AIMPLUM_NEWEST\exe\../output/gdx/SSP2_BaU_NoCC/XSE/2100.gdx
+    96    60912 GDXIN         89      45  .D:\kdianti\practice\AIMPLUM_NEWEST\exe\../output/gdx/base/XSE/basedata.gdx
+    97    60930 BATINCLUDE     1     117  .D:\kdianti\practice\AIMPLUM_NEWEST\exe\../AIMPLUM2/inc_prog/BiolandR.gms
+    98    60946 IF EXIST      97      16  .D:\kdianti\practice\AIMPLUM_NEWEST\exe\../output/gdx/SSP2_BaU_NoCC/XSA/2090.gdx
+    99    60947 GDXIN         97      17  .D:\kdianti\practice\AIMPLUM_NEWEST\exe\../output/gdx/SSP2_BaU_NoCC/XSA/2090.gdx
+   100    60951 IF EXIST      97      23  .D:\kdianti\practice\AIMPLUM_NEWEST\exe\../output/gdx/SSP2_BaU_NoCC/XSA/2010.gdx
+   101    60952 GDXIN         97      24  .D:\kdianti\practice\AIMPLUM_NEWEST\exe\../output/gdx/SSP2_BaU_NoCC/XSA/2010.gdx
+   102    60956 IF EXIST      97      30  .D:\kdianti\practice\AIMPLUM_NEWEST\exe\../output/gdx/SSP2_BaU_NoCC/XSA/2100.gdx
+   103    60957 GDXIN         97      31  .D:\kdianti\practice\AIMPLUM_NEWEST\exe\../output/gdx/SSP2_BaU_NoCC/XSA/2100.gdx
+   104    60964 GDXIN         97      45  .D:\kdianti\practice\AIMPLUM_NEWEST\exe\../output/gdx/base/XSA/basedata.gdx
+   105    60982 BATINCLUDE     1     118  .D:\kdianti\practice\AIMPLUM_NEWEST\exe\../AIMPLUM2/inc_prog/BiolandR.gms
+   106    60998 IF EXIST     105      16  .D:\kdianti\practice\AIMPLUM_NEWEST\exe\../output/gdx/SSP2_BaU_NoCC/CAN/2090.gdx
+   107    61002 IF EXIST     105      23  .D:\kdianti\practice\AIMPLUM_NEWEST\exe\../output/gdx/SSP2_BaU_NoCC/CAN/2010.gdx
+   108    61003 GDXIN        105      24  .D:\kdianti\practice\AIMPLUM_NEWEST\exe\../output/gdx/SSP2_BaU_NoCC/CAN/2010.gdx
+   109    61007 IF EXIST     105      30  .D:\kdianti\practice\AIMPLUM_NEWEST\exe\../output/gdx/SSP2_BaU_NoCC/CAN/2100.gdx
+   110    61016 GDXIN        105      45  .D:\kdianti\practice\AIMPLUM_NEWEST\exe\../output/gdx/base/CAN/basedata.gdx
+   111    61034 BATINCLUDE     1     119  .D:\kdianti\practice\AIMPLUM_NEWEST\exe\../AIMPLUM2/inc_prog/BiolandR.gms
+   112    61050 IF EXIST     111      16  .D:\kdianti\practice\AIMPLUM_NEWEST\exe\../output/gdx/SSP2_BaU_NoCC/BRA/2090.gdx
+   113    61051 GDXIN        111      17  .D:\kdianti\practice\AIMPLUM_NEWEST\exe\../output/gdx/SSP2_BaU_NoCC/BRA/2090.gdx
+   114    61055 IF EXIST     111      23  .D:\kdianti\practice\AIMPLUM_NEWEST\exe\../output/gdx/SSP2_BaU_NoCC/BRA/2010.gdx
+   115    61056 GDXIN        111      24  .D:\kdianti\practice\AIMPLUM_NEWEST\exe\../output/gdx/SSP2_BaU_NoCC/BRA/2010.gdx
+   116    61060 IF EXIST     111      30  .D:\kdianti\practice\AIMPLUM_NEWEST\exe\../output/gdx/SSP2_BaU_NoCC/BRA/2100.gdx
+   117    61061 GDXIN        111      31  .D:\kdianti\practice\AIMPLUM_NEWEST\exe\../output/gdx/SSP2_BaU_NoCC/BRA/2100.gdx
+   118    61068 GDXIN        111      45  .D:\kdianti\practice\AIMPLUM_NEWEST\exe\../output/gdx/base/BRA/basedata.gdx
+   119    61086 BATINCLUDE     1     120  .D:\kdianti\practice\AIMPLUM_NEWEST\exe\../AIMPLUM2/inc_prog/BiolandR.gms
+   120    61102 IF EXIST     119      16  .D:\kdianti\practice\AIMPLUM_NEWEST\exe\../output/gdx/SSP2_BaU_NoCC/XLM/2090.gdx
+   121    61103 GDXIN        119      17  .D:\kdianti\practice\AIMPLUM_NEWEST\exe\../output/gdx/SSP2_BaU_NoCC/XLM/2090.gdx
+   122    61107 IF EXIST     119      23  .D:\kdianti\practice\AIMPLUM_NEWEST\exe\../output/gdx/SSP2_BaU_NoCC/XLM/2010.gdx
+   123    61108 GDXIN        119      24  .D:\kdianti\practice\AIMPLUM_NEWEST\exe\../output/gdx/SSP2_BaU_NoCC/XLM/2010.gdx
+   124    61112 IF EXIST     119      30  .D:\kdianti\practice\AIMPLUM_NEWEST\exe\../output/gdx/SSP2_BaU_NoCC/XLM/2100.gdx
+   125    61113 GDXIN        119      31  .D:\kdianti\practice\AIMPLUM_NEWEST\exe\../output/gdx/SSP2_BaU_NoCC/XLM/2100.gdx
+   126    61120 GDXIN        119      45  .D:\kdianti\practice\AIMPLUM_NEWEST\exe\../output/gdx/base/XLM/basedata.gdx
+   127    61138 BATINCLUDE     1     121  .D:\kdianti\practice\AIMPLUM_NEWEST\exe\../AIMPLUM2/inc_prog/BiolandR.gms
+   128    61154 IF EXIST     127      16  .D:\kdianti\practice\AIMPLUM_NEWEST\exe\../output/gdx/SSP2_BaU_NoCC/CIS/2090.gdx
+   129    61155 GDXIN        127      17  .D:\kdianti\practice\AIMPLUM_NEWEST\exe\../output/gdx/SSP2_BaU_NoCC/CIS/2090.gdx
+   130    61159 IF EXIST     127      23  .D:\kdianti\practice\AIMPLUM_NEWEST\exe\../output/gdx/SSP2_BaU_NoCC/CIS/2010.gdx
+   131    61160 GDXIN        127      24  .D:\kdianti\practice\AIMPLUM_NEWEST\exe\../output/gdx/SSP2_BaU_NoCC/CIS/2010.gdx
+   132    61164 IF EXIST     127      30  .D:\kdianti\practice\AIMPLUM_NEWEST\exe\../output/gdx/SSP2_BaU_NoCC/CIS/2100.gdx
+   133    61165 GDXIN        127      31  .D:\kdianti\practice\AIMPLUM_NEWEST\exe\../output/gdx/SSP2_BaU_NoCC/CIS/2100.gdx
+   134    61172 GDXIN        127      45  .D:\kdianti\practice\AIMPLUM_NEWEST\exe\../output/gdx/base/CIS/basedata.gdx
+   135    61190 BATINCLUDE     1     122  .D:\kdianti\practice\AIMPLUM_NEWEST\exe\../AIMPLUM2/inc_prog/BiolandR.gms
+   136    61206 IF EXIST     135      16  .D:\kdianti\practice\AIMPLUM_NEWEST\exe\../output/gdx/SSP2_BaU_NoCC/XME/2090.gdx
+   137    61210 IF EXIST     135      23  .D:\kdianti\practice\AIMPLUM_NEWEST\exe\../output/gdx/SSP2_BaU_NoCC/XME/2010.gdx
+   138    61214 IF EXIST     135      30  .D:\kdianti\practice\AIMPLUM_NEWEST\exe\../output/gdx/SSP2_BaU_NoCC/XME/2100.gdx
+   139    61223 GDXIN        135      45  .D:\kdianti\practice\AIMPLUM_NEWEST\exe\../output/gdx/base/XME/basedata.gdx
+   140    61241 BATINCLUDE     1     123  .D:\kdianti\practice\AIMPLUM_NEWEST\exe\../AIMPLUM2/inc_prog/BiolandR.gms
+   141    61257 IF EXIST     140      16  .D:\kdianti\practice\AIMPLUM_NEWEST\exe\../output/gdx/SSP2_BaU_NoCC/XNF/2090.gdx
+   142    61261 IF EXIST     140      23  .D:\kdianti\practice\AIMPLUM_NEWEST\exe\../output/gdx/SSP2_BaU_NoCC/XNF/2010.gdx
+   143    61265 IF EXIST     140      30  .D:\kdianti\practice\AIMPLUM_NEWEST\exe\../output/gdx/SSP2_BaU_NoCC/XNF/2100.gdx
+   144    61274 GDXIN        140      45  .D:\kdianti\practice\AIMPLUM_NEWEST\exe\../output/gdx/base/XNF/basedata.gdx
+   145    61292 BATINCLUDE     1     124  .D:\kdianti\practice\AIMPLUM_NEWEST\exe\../AIMPLUM2/inc_prog/BiolandR.gms
+   146    61308 IF EXIST     145      16  .D:\kdianti\practice\AIMPLUM_NEWEST\exe\../output/gdx/SSP2_BaU_NoCC/XAF/2090.gdx
+   147    61312 IF EXIST     145      23  .D:\kdianti\practice\AIMPLUM_NEWEST\exe\../output/gdx/SSP2_BaU_NoCC/XAF/2010.gdx
+   148    61316 IF EXIST     145      30  .D:\kdianti\practice\AIMPLUM_NEWEST\exe\../output/gdx/SSP2_BaU_NoCC/XAF/2100.gdx
+   149    61325 GDXIN        145      45  .D:\kdianti\practice\AIMPLUM_NEWEST\exe\../output/gdx/base/XAF/basedata.gdx
+   150    61380 GDXIN          1     168  D:\kdianti\practice\AIMPLUM_NEWEST\exe\../data/analysis.gdx
+   151    61407 IF EXIST       1     195  D:\kdianti\practice\AIMPLUM_NEWEST\exe\../output/gdx/SSP2_BaU_NoCC/bio/2090.gdx
+   152    61408 GDXIN          1     196  D:\kdianti\practice\AIMPLUM_NEWEST\exe\../output/gdx/SSP2_BaU_NoCC/bio/2090.gdx
+   153    61433 GDXIN          1     223  D:\kdianti\practice\AIMPLUM_NEWEST\exe\../AIMPLUM2/data/CSB.gdx
+   154    61449 GDXIN          1     239  D:\kdianti\practice\AIMPLUM_NEWEST\exe\../AIMPLUM2/data/policydata.gdx
+   155    61617 EXIT           1     448  D:\kdianti\practice\AIMPLUM_NEWEST\exe\../AIMPLUM2/prog/Bioland.gms
+
+
+COMPILATION TIME     =        1.109 SECONDS     24 MB  37.1.0 r07954d5 WEX-WEI
+GAMS 37.1.0  r07954d5 Released Nov 11, 2021 WEX-WEI x86 64bit/MS Windows - 06/20/23 17:55:56 Page 3
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+E x e c u t i o n
+
+
+EXECUTION TIME       =        0.781 SECONDS     77 MB  37.1.0 r07954d5 WEX-WEI
+
+
+USER: Medium MUD - 10 User License                   S201117/0001AO-GEN
+      Kyoto University, Department of Environmental Engineering DC12258
+      License for teaching and research at degree granting institutions
+
+
+**** FILE SUMMARY
+
+Input      D:\kdianti\practice\AIMPLUM_NEWEST\exe\../AIMPLUM2/prog/Bioland.gms
+Output     D:\kdianti\practice\AIMPLUM_NEWEST\exe\../output/lst/Futuresim/Bioland_CIS_SSP2_BaU_NoCC.lst
